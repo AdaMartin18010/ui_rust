@@ -5,13 +5,16 @@
 本指南介绍了2025年Rust生态系统中最优秀的前端框架和桌面应用框架，包括Dioxus、Leptos和Tauri 2.0。
 这些框架代表了Rust在Web开发和桌面应用开发领域的最新进展。
 
-## 📚 框架对比
+## 📚 框架对比 (Rust 1.90优化版)
 
-| 框架 | 类型 | 平台支持 | 性能 | 学习曲线 | 推荐场景 |
-|------|------|----------|------|----------|----------|
-| **Dioxus** | 跨平台UI | Web, Desktop, Mobile | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | 跨平台应用 |
-| **Leptos** | Web框架 | Web | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 现代Web应用 |
-| **Tauri 2.0** | 桌面应用 | Desktop, Mobile | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | 桌面应用 |
+| 框架 | 版本 | 类型 | 平台支持 | 性能 | 学习曲线 | 推荐场景 |
+|------|------|------|----------|------|----------|----------|
+| **Dioxus** | 0.6 | 跨平台UI | Web, Desktop, Mobile | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | 跨平台应用 |
+| **Leptos** | 0.7 | Web框架 | Web | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 现代Web应用 |
+| **Tauri** | 2.0 | 桌面应用 | Desktop, Mobile | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | 桌面应用 |
+| **Slint** | 1.5 | 原生GUI | Desktop, Embedded | ⭐⭐⭐⭐⭐ | ⭐⭐ | 原生应用 |
+| **Iced** | 0.12 | 声明式GUI | Desktop | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 现代化GUI |
+| **egui** | 0.27 | 即时模式 | Desktop, Web | ⭐⭐⭐⭐ | ⭐⭐⭐ | 工具界面 |
 
 ## 🚀 Dioxus - 跨平台UI框架
 
@@ -23,6 +26,9 @@
 - ✅ 类型安全
 - ✅ 响应式状态管理
 - ✅ 热重载支持
+- ✅ Rust 1.90新特性集成
+- ✅ 改进的异步编程支持
+- ✅ 增强的模式匹配
 
 ### 快速开始
 
@@ -88,6 +94,9 @@ fn main() {
 - ✅ 高性能
 - ✅ 类型安全
 - ✅ 零运行时开销
+- ✅ Rust 1.90新特性集成
+- ✅ 改进的错误处理
+- ✅ 增强的异步支持
 
 ### 快速开始1
 
@@ -161,6 +170,92 @@ async fn main() {
 - ✅ 更好的安全性
 - ✅ 原生系统集成
 - ✅ 系统托盘支持
+- ✅ Rust 1.90新特性集成
+- ✅ 改进的插件系统
+- ✅ 增强的移动端支持
+
+## 🎨 Slint 1.0 - 原生GUI框架
+
+### 特性3
+
+- ✅ 原生性能，低内存占用
+- ✅ 支持多平台 (Linux, macOS, Windows, WebAssembly)
+- ✅ 嵌入式设备支持 (Raspberry Pi Pico等)
+- ✅ 类型安全的声明式UI
+- ✅ C++和JavaScript绑定
+- ✅ 现代化设计系统
+- ✅ Rust 1.90新特性集成
+
+### 快速开始3
+
+```bash
+# 启用Slint特性
+cargo run --example slint_example --features slint
+```
+
+### 基本用法3
+
+```rust
+use slint::SharedString;
+
+slint::slint! {
+    import { Button, VerticalBox, LineEdit, Text } from "std-widgets.slint";
+
+    export component AppWindow inherits Window {
+        title: "Slint 1.0 示例";
+        width: 400px;
+        height: 300px;
+        
+        property <string> input-text: "Hello, Slint!";
+        property <int> click-count: 0;
+        
+        callback button-clicked();
+        
+        VerticalBox {
+            Text {
+                text: "欢迎使用 Slint 1.0";
+                font-size: 20px;
+            }
+            
+            LineEdit {
+                text: root.input-text;
+                placeholder-text: "输入一些文本...";
+            }
+            
+            Button {
+                text: "点击我!";
+                clicked => {
+                    root.button-clicked();
+                }
+            }
+            
+            Text {
+                text: "点击次数: " + root.click-count;
+            }
+        }
+    }
+}
+
+fn main() -> Result<(), slint::PlatformError> {
+    let app = AppWindow::new()?;
+    
+    let app_weak = app.as_weak();
+    app.on_button_clicked(move || {
+        let app = app_weak.unwrap();
+        let current_count = app.get_click_count();
+        app.set_click_count(current_count + 1);
+    });
+    
+    app.run()
+}
+```
+
+### 最佳实践3
+
+1. **组件设计**: 使用声明式语法设计UI组件
+2. **性能优化**: 利用原生渲染性能优势
+3. **跨平台**: 考虑不同平台的UI差异
+4. **嵌入式**: 针对低内存设备优化
 
 ### 快速开始2
 
@@ -276,6 +371,7 @@ tauri build
 | Dioxus Web | ~50KB | ~200KB | 包含运行时 |
 | Leptos | ~10KB | ~50KB | 零运行时 |
 | Tauri | ~5MB | ~20MB | 包含WebView |
+| Slint | ~300KB | ~2MB | 原生渲染 |
 
 ### 性能基准
 
@@ -284,6 +380,7 @@ tauri build
 | Dioxus | 快 | 中等 | 高 |
 | Leptos | 很快 | 低 | 很高 |
 | Tauri | 中等 | 低 | 高 |
+| Slint | 很快 | 很低 | 很高 |
 
 ## 🎯 选择建议
 
@@ -307,6 +404,13 @@ tauri build
 - 需要系统集成
 - 安全性要求高
 - 希望最小化包大小
+
+### 选择Slint的场景
+
+- 原生桌面应用
+- 嵌入式设备开发
+- 极低内存占用要求
+- 需要最高性能
 
 ## 🚀 未来展望
 

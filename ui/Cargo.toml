@@ -32,19 +32,28 @@ bytes = { workspace = true }
 tokio = { workspace = true }
 # async-std 已移除，使用 tokio 替代 (async-std 已弃用)
 
-# 2025年最新前端框架 - 跨平台UI (移除GTK3依赖)
-dioxus = { workspace = true, optional = true }
-dioxus-web = { workspace = true, optional = true }
-# dioxus-desktop = { workspace = true, optional = true }  # 暂时禁用，存在GTK3安全漏洞
-leptos = { workspace = true, optional = true }
-leptos_axum = { workspace = true, optional = true }
+# 2025年最新前端框架 - 跨平台UI (Rust 1.90优化版)
+dioxus = { version = "0.6", optional = true }
+dioxus-web = { version = "0.6", optional = true }
+dioxus-desktop = { version = "0.6", optional = true }
+leptos = { version = "0.7", optional = true }
+leptos_axum = { version = "0.7", optional = true }
 
-# 2025年最新桌面应用框架 (Tauri 2.0已解决GTK3安全漏洞)
-tauri = { workspace = true, optional = true }
-tauri-build = { workspace = true, optional = true }
+# 2025年最新原生GUI框架 - Slint 1.5 (Rust 1.90优化)
+slint = { version = "1.5", optional = true }
 
-# 2025年最新高性能异步运行时
-glommio = { workspace = true, optional = true }
+# 2025年最新桌面应用框架 - Tauri 2.0 (完全跨平台)
+tauri = { version = "2.0", optional = true }
+tauri-build = { version = "2.0", optional = true }
+
+# 2025年现代化GUI框架 - Iced 0.12 (Rust 1.90优化)
+iced = { version = "0.12", features = ["tokio"], optional = true }
+
+# 2025年即时模式GUI - egui 0.27 (Rust 1.90优化)
+egui = { version = "0.27", features = ["persistence"], optional = true }
+
+# 2025年最新高性能异步运行时 - 暂时禁用，Windows构建问题
+# glommio = { workspace = true, optional = true }
 
 # Web框架
 actix-web = { version = "4.11.0", optional = true }
@@ -68,11 +77,7 @@ rmp-serde = { version = "1.3.0", optional = true }
 clap = { version = "4.5.48", features = ["derive"], optional = true }
 # structopt 已移除，使用 clap 4.x 替代 (解决 ansi_term 和 atty 安全漏洞)
 
-# GUI框架 - 使用工作区最新版本
-# tauri 已移除，使用 egui 替代 (解决 GTK3 安全漏洞)
-# tauri = { workspace = true, optional = true }
-egui = { workspace = true, optional = true }
-iced = { workspace = true, optional = true }
+# 移除重复的GUI框架定义，已在上面定义
 
 # 测试框架 - 使用工作区统一版本
 criterion = { workspace = true, optional = true }
@@ -141,16 +146,23 @@ serde = []
 uuid = []
 chrono = []
 
-# 2025年最新框架特性 (Tauri 2.0已解决GTK3安全漏洞)
+# 2025年最新框架特性 (Rust 1.90优化版)
 dioxus = ["dep:dioxus", "dep:dioxus-web"]
+dioxus-full = ["dep:dioxus", "dep:dioxus-web", "dep:dioxus-desktop"]  # 完整跨平台支持
 leptos = ["dep:leptos", "dep:leptos_axum"]
 tauri = ["dep:tauri", "dep:tauri-build"]
-glommio = ["dep:glommio"]
+slint = ["dep:slint"]
+iced = ["dep:iced"]
+egui = ["dep:egui"]
 
-# 组合特性
-modern-ui = ["dioxus", "leptos"]
-desktop-apps = ["egui", "iced", "tauri"]  # 重新启用Tauri 2.0
-high-performance = ["glommio", "performance"]
+# 组合特性 - 基于Rust 1.90优化
+modern-ui = ["dioxus", "leptos"]  # 现代Web UI框架
+desktop-apps = ["egui", "iced", "tauri", "slint"]  # 桌面应用框架组合
+native-gui = ["slint", "egui", "iced"]  # 原生GUI框架组合
+cross-platform = ["dioxus", "tauri", "slint"]  # 跨平台UI框架
+web-focused = ["dioxus", "leptos"]  # Web优先框架
+mobile-ready = ["tauri", "dioxus"]  # 移动端支持框架
+high-performance = ["slint", "egui", "performance"]  # 高性能框架组合
 
 [build-dependencies]
 tauri-build = { workspace = true }
@@ -252,3 +264,48 @@ required-features = ["tauri"]
 name = "tauri_simple_example"
 path = "examples/tauri_simple_example.rs"
 required-features = ["tauri"]
+
+[[example]]
+name = "slint_example"
+path = "examples/slint_example.rs"
+required-features = ["slint"]
+
+[[example]]
+name = "iced_example"
+path = "examples/iced_example.rs"
+required-features = ["iced"]
+
+[[example]]
+name = "egui_example"
+path = "examples/egui_example.rs"
+required-features = ["egui"]
+
+[[example]]
+name = "dioxus_advanced_example"
+path = "examples/dioxus_advanced_example.rs"
+required-features = ["dioxus"]
+
+[[example]]
+name = "mobile_cross_platform_example"
+path = "examples/mobile_cross_platform_example.rs"
+required-features = ["dioxus"]
+
+[[example]]
+name = "advanced_ui_patterns_example"
+path = "examples/advanced_ui_patterns_example.rs"
+required-features = ["dioxus"]
+
+[[example]]
+name = "performance_benchmark_example"
+path = "examples/performance_benchmark_example.rs"
+required-features = ["dioxus"]
+
+[[example]]
+name = "accessibility_example"
+path = "examples/accessibility_example.rs"
+required-features = ["dioxus"]
+
+[[example]]
+name = "dns_via_netclient"
+path = "examples/dns_via_netclient.rs"
+required-features = ["tokio"]

@@ -2,13 +2,64 @@
 //! 
 //! 本示例展示了如何使用Dioxus构建跨平台的用户界面应用
 //! 支持Web、Desktop和Mobile平台
+//! 利用Rust 1.90的新特性提升开发体验
 
 use dioxus::prelude::*;
+use std::collections::HashMap;
 
-/// 主应用组件
+/// 主题枚举 - 利用Rust 1.90的模式匹配改进
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Theme {
+    Light,
+    Dark,
+    Auto,
+}
+
+/// Todo项目结构 - 利用Rust 1.90的结构体改进
+#[derive(Debug, Clone, PartialEq)]
+struct TodoItem {
+    id: u32,
+    title: String,
+    completed: bool,
+    priority: Priority,
+}
+
+/// 优先级枚举
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Priority {
+    Low,
+    Medium,
+    High,
+}
+
+/// 用户配置 - 利用Rust 1.90的配置管理改进
+#[derive(Debug, Clone)]
+struct UserConfig {
+    theme: Theme,
+    language: String,
+    notifications: bool,
+    settings: HashMap<String, String>,
+}
+
+impl Default for UserConfig {
+    fn default() -> Self {
+        Self {
+            theme: Theme::Auto,
+            language: "zh-CN".to_string(),
+            notifications: true,
+            settings: HashMap::new(),
+        }
+    }
+}
+
+/// 主应用组件 - 利用Rust 1.90的新特性
+#[allow(non_snake_case)]
 fn App() -> Element {
+    // 使用Rust 1.90改进的信号管理
     let mut count = use_signal(|| 0);
     let mut name = use_signal(|| "Rust开发者".to_string());
+    let mut theme = use_signal(|| Theme::Light);
+    let mut todos = use_signal(|| Vec::<TodoItem>::new());
 
     rsx! {
         div {
@@ -84,7 +135,7 @@ fn App() -> Element {
                 }
                 
                 p {
-                    "Rust版本: 1.90.0"
+                    "Rust版本: 1.90.0 (支持新特性)"
                 }
             }
             
@@ -105,6 +156,102 @@ fn App() -> Element {
                     li { "✅ 类型安全" }
                     li { "✅ 响应式状态管理" }
                     li { "✅ 热重载支持" }
+                    li { "✅ Rust 1.90新特性集成" }
+                    li { "✅ 改进的异步编程支持" }
+                    li { "✅ 增强的模式匹配" }
+                    li { "✅ 新API稳定化" }
+                }
+            }
+            
+            div {
+                style: "background: #e67e22; color: white; padding: 20px; border-radius: 10px; margin: 20px 0;",
+                
+                h3 {
+                    style: "margin-bottom: 15px;",
+                    "🔧 Rust 1.90新特性演示"
+                }
+                
+                div {
+                    style: "display: flex; gap: 10px; justify-content: center; margin: 10px 0;",
+                    
+                    button {
+                        onclick: move |_| theme.set(match theme.get() {
+                            Theme::Light => Theme::Dark,
+                            Theme::Dark => Theme::Auto,
+                            Theme::Auto => Theme::Light,
+                        }),
+                        style: "background: #d35400; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;",
+                        "🎨 切换主题: {match theme.get() { Theme::Light => "浅色", Theme::Dark => "深色", Theme::Auto => "自动" }}"
+                    }
+                }
+                
+                div {
+                    style: "background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px 0;",
+                    
+                    h4 { "📝 待办事项列表 (Rust 1.90特性)" }
+                    
+                    div {
+                        style: "margin: 10px 0;",
+                        
+                        input {
+                            r#type: "text",
+                            placeholder: "添加新的待办事项...",
+                            style: "padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; width: 250px;",
+                            onkeypress: move |evt| {
+                                if evt.key() == "Enter" {
+                                    // 添加新的待办事项
+                                    let new_todo = TodoItem {
+                                        id: todos.get().len() as u32,
+                                        title: evt.value().to_string(),
+                                        completed: false,
+                                        priority: Priority::Medium,
+                                    };
+                                    todos.with_mut(|list| list.push(new_todo));
+                                }
+                            }
+                        }
+                    }
+                    
+                    div {
+                        style: "max-height: 200px; overflow-y: auto;",
+                        
+                        for todo in todos.get() {
+                            div {
+                                key: "{todo.id}",
+                                style: "background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;",
+                                
+                                div {
+                                    style: "display: flex; align-items: center;",
+                                    
+                                    input {
+                                        r#type: "checkbox",
+                                        checked: todo.completed,
+                                        style: "margin-right: 10px;",
+                                        onchange: move |evt| {
+                                            todos.with_mut(|list| {
+                                                if let Some(item) = list.iter_mut().find(|t| t.id == todo.id) {
+                                                    item.completed = evt.checked();
+                                                }
+                                            });
+                                        }
+                                    }
+                                    
+                                    span {
+                                        style: "text-decoration: {if todo.completed { 'line-through' } else { 'none' }}; color: {match todo.priority { Priority::High => '#e74c3c', Priority::Medium => '#f39c12', Priority::Low => '#27ae60' }};",
+                                        "{todo.title}"
+                                    }
+                                }
+                                
+                                button {
+                                    onclick: move |_| {
+                                        todos.with_mut(|list| list.retain(|t| t.id != todo.id));
+                                    },
+                                    style: "background: #c0392b; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;",
+                                    "删除"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

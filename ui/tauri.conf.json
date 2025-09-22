@@ -1,20 +1,79 @@
 {
-  "productName": "Tauri Example",
-  "version": "0.1.0",
-  "identifier": "com.tauri.example",
+  "productName": "Rust UI 2025",
+  "version": "2.0.0",
+  "identifier": "com.rustui.example",
   "build": {
-    "frontendDist": "./dist"
+    "frontendDist": "./dist",
+    "devPath": "http://localhost:3000",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
   },
   "app": {
     "windows": [
       {
-        "title": "Tauri Example",
-        "width": 800,
-        "height": 600
+        "title": "Rust UI 2025 - Tauri 2.0示例",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "titleBarStyle": "Visible"
       }
-    ]
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
-    "active": false
+    "active": true,
+    "targets": "all",
+    "identifier": "com.rustui.example",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "Copyright © 2025 Rust UI Team",
+    "category": "DeveloperTool",
+    "shortDescription": "Rust UI框架示例应用",
+    "longDescription": "展示Rust 1.90版本特性和最新UI库的示例应用程序",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": ["$APPDATA", "$APPDATA/**", "$RESOURCE", "$RESOURCE/**"]
+    },
+    "shell": {
+      "open": true
+    }
   }
 }

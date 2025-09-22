@@ -1,4 +1,4 @@
-use c10_networks::NetClient;
+use c11_frameworks::net::NetClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

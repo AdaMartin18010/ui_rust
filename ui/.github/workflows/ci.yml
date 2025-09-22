@@ -1,0 +1,319 @@
+name: Rust UI Framework CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # 代码质量检查
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+        
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Format check
+      run: cargo fmt --all -- --check
+      
+    - name: Clippy check
+      run: cargo clippy --all-targets --all-features -- -D warnings
+      
+    - name: Security audit
+      uses: rustsec/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  # 跨平台构建测试
+  cross-platform-build:
+    name: Cross-Platform Build
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            features: "default"
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            features: "default"
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            features: "default"
+          - os: ubuntu-latest
+            target: wasm32-unknown-unknown
+            features: "dioxus"
+            
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+        
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Install system dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+        sudo apt-get install -y libasound2-dev
+        sudo apt-get install -y pkg-config
+        
+    - name: Install wasm-pack (for WASM builds)
+      if: matrix.target == 'wasm32-unknown-unknown'
+      run: |
+        curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        
+    - name: Build examples
+      run: |
+        cargo build --examples --features ${{ matrix.features }} --target ${{ matrix.target }} --verbose
+        
+    - name: Test examples
+      if: matrix.target != 'wasm32-unknown-unknown'
+      run: |
+        cargo test --examples --features ${{ matrix.features }} --target ${{ matrix.target }} --verbose
+
+  # 框架特定测试
+  framework-tests:
+    name: Framework Tests
+    strategy:
+      matrix:
+        include:
+          - framework: "dioxus"
+            example: "dioxus_example"
+          - framework: "dioxus"
+            example: "dioxus_advanced_example"
+          - framework: "dioxus"
+            example: "mobile_cross_platform_example"
+          - framework: "dioxus"
+            example: "advanced_ui_patterns_example"
+          - framework: "leptos"
+            example: "leptos_simple_example"
+          - framework: "tauri"
+            example: "tauri_example"
+          - framework: "slint"
+            example: "slint_example"
+          - framework: "iced"
+            example: "iced_example"
+          - framework: "egui"
+            example: "egui_example"
+          - framework: "dioxus"
+            example: "performance_benchmark_example"
+          - framework: "dioxus"
+            example: "accessibility_example"
+            
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.framework }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+        sudo apt-get install -y libasound2-dev
+        sudo apt-get install -y pkg-config
+        
+    - name: Test ${{ matrix.framework }} example
+      run: |
+        cargo run --example ${{ matrix.example }} --features ${{ matrix.framework }} --verbose
+
+  # 性能基准测试
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: llvm-tools-preview
+        
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-benchmark-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+        
+    - name: Run performance benchmarks
+      run: |
+        cargo bench --features performance
+        
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: target/criterion/
+
+  # 文档生成和部署
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rust-docs
+        
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-docs-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Generate documentation
+      run: |
+        cargo doc --all-features --no-deps --document-private-items
+        
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./target/doc
+
+  # 安全检查
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Run cargo audit
+      uses: rustsec/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Run cargo deny
+      run: |
+        cargo install cargo-deny
+        cargo deny check
+
+  # 发布准备
+  release-prep:
+    name: Release Preparation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Build release artifacts
+      run: |
+        cargo build --release --all-features
+        
+    - name: Create release archive
+      run: |
+        tar -czf rust-ui-framework-${{ github.event.release.tag_name }}.tar.gz target/release/
+        
+    - name: Upload release artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./rust-ui-framework-${{ github.event.release.tag_name }}.tar.gz
+        asset_name: rust-ui-framework-${{ github.event.release.tag_name }}.tar.gz
+        asset_content_type: application/gzip
+
+  # 通知
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [code-quality, cross-platform-build, framework-tests, performance-benchmark, docs, security-scan]
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.code-quality.result == 'success' && needs.cross-platform-build.result == 'success' && needs.framework-tests.result == 'success'
+      run: |
+        echo "✅ All tests passed successfully!"
+        
+    - name: Notify failure
+      if: needs.code-quality.result == 'failure' || needs.cross-platform-build.result == 'failure' || needs.framework-tests.result == 'failure'
+      run: |
+        echo "❌ Some tests failed. Please check the logs."

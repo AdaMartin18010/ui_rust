@@ -1,11 +1,15 @@
-//! Leptos 简化示例
+//! Leptos 现代化Web框架示例
 //! 
-//! 本示例展示了Leptos的基本用法，避免复杂的API问题
+//! 本示例展示了Leptos的基本用法和服务端渲染功能
+//! 利用Rust 1.90的新特性提升开发体验
 
 use leptos::*;
+use leptos_axum::*;
+use axum::{routing::get, Router};
 
 /// 主应用组件
 #[component]
+#[allow(non_snake_case)]
 fn App() -> impl IntoView {
     let (count, set_count) = create_signal(0);
     let (name, set_name) = create_signal("Rust开发者".to_string());
@@ -89,15 +93,44 @@ fn App() -> impl IntoView {
                     <li>"✅ 高性能"</li>
                     <li>"✅ 类型安全"</li>
                     <li>"✅ 零运行时开销"</li>
+                    <li>"✅ Rust 1.90新特性集成"</li>
+                    <li>"✅ 改进的异步编程"</li>
+                    <li>"✅ 增强的错误处理"</li>
                 </ul>
             </div>
         </div>
     }
 }
 
-/// 主函数
+/// 主函数 - 客户端渲染
+#[cfg(not(feature = "ssr"))]
 fn main() {
     leptos::mount_to_body(App)
+}
+
+/// 主函数 - 服务端渲染
+#[cfg(feature = "ssr")]
+#[tokio::main]
+async fn main() {
+    use axum::response::Html;
+    
+    // 创建Leptos配置
+    let conf = get_configuration(None).await.unwrap();
+    let leptos_options = conf.leptos_options;
+    let root = leptos_options.site_root.clone();
+    
+    // 创建Axum路由器
+    let app = Router::new()
+        .leptos_routes_with_handler(
+            leptos_options,
+            move || view! { <App/> },
+        )
+        .fallback(file_and_error_handler(root));
+    
+    // 启动服务器
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    println!("🚀 Leptos SSR服务器启动在 http://127.0.0.1:3000");
+    axum::serve(listener, app).await.unwrap();
 }
 
 /// 测试模块

@@ -1,6 +1,6 @@
 // 使用 hyper 直接提供最小 HTTP 服务，避免 hyper/axum 版本耦合导致的适配复杂度
 use bytes::Bytes;
-use c10_networks::{AcmeManager, Http01MemoryStore, TlsReloader};
+use c11_frameworks::net::{AcmeManager, Http01MemoryStore, TlsReloader};
 use http_body_util::Full;
 use hyper::{Request, Response, StatusCode, body::Incoming as HyperIncoming};
 use rustls::ServerConfig;
@@ -50,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
     // 启动占位 AcmeManager：自动生成/读取 ./acme 证书并配合文件监控触发热重载
     let mut mgr = AcmeManager::new(
         std::path::PathBuf::from("./acme"),
-        "https://acme-staging-v02.api.letsencrypt.org/directory",
+        "https://acme-staging-v02.api.letsencrypt.org/directory".to_string(),
         vec!["example.org".to_string(), "www.example.org".to_string()],
     );
     mgr.contact_email = Some("admin@example.org".to_string());
