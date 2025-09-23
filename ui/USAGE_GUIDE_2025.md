@@ -1,383 +1,257 @@
-# Rust 1.90 跨平台UI框架使用指南
+# Rust UI 框架使用指南 2025
 
-## 🚀 快速开始
+## 概述
 
-### 环境要求
+本项目展示了2025年最新的Rust UI框架生态系统，包括Web UI、桌面GUI和移动端跨平台开发的最佳实践。
 
-- Rust 1.90+
-- Cargo
-- 目标平台相关依赖
+## 成功编译的示例
 
-### 安装依赖
+### ✅ Web UI 框架
 
-```bash
-# 克隆项目
-git clone <your-repo>
-cd ui_rust/ui
-
-# 安装所有依赖
-cargo build
-```
-
-## 🎯 运行示例
-
-### 1. Dioxus 跨平台UI示例
+#### 1. Dioxus 0.6 - 现代化Web UI
 
 ```bash
-# Web版本
+cargo run --example mobile_cross_platform_example --features dioxus
 cargo run --example dioxus_example --features dioxus
-
-# Desktop版本 (如果支持)
-cargo run --example dioxus_example --features dioxus-full
 ```
 
-### 2. Leptos Web框架示例
+**特性：**
+
+- 类似React的组件模型
+- 跨平台支持 (Web, Desktop, Mobile)
+- 高性能渲染
+- Rust 1.90新特性集成
+- 响应式状态管理
+
+**适用场景：**
+
+- 现代化Web应用
+- 跨平台移动应用
+- 桌面应用
+- 实时数据展示
+
+#### 2. Leptos 0.7 - 全栈Web框架
 
 ```bash
-# 客户端渲染
 cargo run --example leptos_simple_example --features leptos
-
-# 服务端渲染 (需要额外配置)
-cargo run --example leptos_ssr_example --features leptos
 ```
 
-### 3. Tauri 2.0 桌面应用示例
+**特性：**
 
-```bash
-# 基础示例
-cargo run --example tauri_basic_example --features tauri
+- 服务端渲染 (SSR)
+- 客户端水合
+- 类型安全的全栈开发
+- 现代化API设计
+- 高性能
 
-# 完整示例
-cargo run --example tauri_example --features tauri
-```
+**适用场景：**
 
-### 4. Slint 1.5 原生GUI示例
+- 全栈Web应用
+- 需要SEO的应用
+- 企业级Web服务
 
-```bash
-cargo run --example slint_example --features slint
-```
+### ✅ 即时模式GUI
 
-### 5. Iced 0.12 声明式GUI示例
-
-```bash
-cargo run --example iced_example --features iced
-```
-
-### 6. egui 0.27 即时模式GUI示例
+#### 3. egui 0.32 - 即时模式GUI
 
 ```bash
 cargo run --example egui_example --features egui
 ```
 
-## 🔧 特性组合使用
+**特性：**
 
-### 现代UI框架组合
+- 即时模式渲染
+- 快速原型开发
+- 跨平台支持
+- 适合工具和调试界面
+- 低学习曲线
 
-```bash
-# 同时启用Dioxus和Leptos
-cargo run --features modern-ui
-```
+**适用场景：**
 
-### 桌面应用框架组合
+- 开发工具
+- 调试界面
+- 数据可视化工具
+- 游戏编辑器
 
-```bash
-# 启用所有桌面GUI框架
-cargo run --features desktop-apps
-```
+### ✅ Web服务器框架
 
-### 跨平台UI框架组合
-
-```bash
-# 启用跨平台UI框架
-cargo run --features cross-platform
-```
-
-### 高性能框架组合
+#### 4. Axum 0.8 - 现代化Web框架
 
 ```bash
-# 启用高性能框架
-cargo run --features high-performance
+cargo run --example axum_example --features axum
 ```
 
-## 📱 平台特定构建
+**特性：**
 
-### Windows
+- 基于tower生态
+- 类型安全的路由
+- 中间件支持
+- 异步优先
+- 高性能
+
+**适用场景：**
+
+- RESTful API
+- Web服务
+- 微服务架构
+- 高并发应用
+
+#### 5. Actix Web 4.11 - 企业级Web框架
 
 ```bash
-# 确保安装了Windows SDK
-cargo run --example slint_example --features slint --target x86_64-pc-windows-msvc
+cargo run --example actix_web_example --features actix-web
 ```
 
-### macOS
+**特性：**
+
+- 企业级特性
+- 丰富的中间件
+- 强大的类型系统
+- 高并发支持
+- 成熟稳定
+
+**适用场景：**
+
+- 企业级应用
+- 高并发服务
+- 复杂的Web应用
+- 生产环境
+
+## 编译状态总结
+
+| 示例 | 状态 | 特性 | 说明 |
+|------|------|------|------|
+| mobile_cross_platform_example | ✅ 成功 | dioxus | 移动端跨平台UI示例 |
+| dioxus_example | ✅ 成功 | dioxus | 基础Dioxus示例 |
+| leptos_simple_example | ✅ 成功 | leptos | 简化Leptos示例 |
+| egui_example | ✅ 成功 | egui | 即时模式GUI示例 |
+| axum_example | ✅ 成功 | axum | Web服务器示例 |
+| actix_web_example | ✅ 成功 | actix-web | 企业级Web框架示例 |
+| iced_example | ⚠️ 需要修复 | iced | GUI框架，API变化较大 |
+| slint_example | ⚠️ 需要修复 | slint | 声明式GUI，需要UI文件 |
+
+## 快速开始
+
+### 1. 克隆项目
 
 ```bash
-# 确保安装了Xcode命令行工具
-cargo run --example iced_example --features iced --target x86_64-apple-darwin
+git clone <repository-url>
+cd ui_rust
 ```
 
-### Linux
+### 2. 安装依赖
 
 ```bash
-# 确保安装了必要的系统库
-sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
-cargo run --example tauri_example --features tauri
+cargo build
 ```
 
-### WebAssembly
+### 3. 运行示例
 
 ```bash
-# 安装wasm-pack
-cargo install wasm-pack
+# Web UI框架
+cargo run --example mobile_cross_platform_example --features dioxus
+cargo run --example leptos_simple_example --features leptos
 
-# 构建WebAssembly版本
-wasm-pack build --target web --out-dir pkg
+# 即时模式GUI
+cargo run --example egui_example --features egui
+
+# Web服务器
+cargo run --example axum_example --features axum
+cargo run --example actix_web_example --features actix-web
 ```
 
-## 🛠️ 开发工具
+## 技术栈特点
 
-### Dioxus开发工具
+### Rust 1.90 新特性
 
-```bash
-# 安装Dioxus CLI
-cargo install dioxus-cli
+- 改进的异步编程支持
+- 增强的模式匹配
+- 新API稳定化
+- 性能优化
 
-# 启动开发服务器
-dx serve
+### 现代化架构
 
-# 构建生产版本
-dx build --release
-```
+- 类型安全
+- 内存安全
+- 零成本抽象
+- 高性能
 
-### Leptos开发工具
+### 跨平台支持
 
-```bash
-# 安装Leptos CLI
-cargo install cargo-leptos
+- Web (WASM)
+- 桌面 (Windows, macOS, Linux)
+- 移动端 (iOS, Android)
 
-# 热重载开发
-cargo leptos watch
+## 性能对比
 
-# 构建生产版本
-cargo leptos build --release
-```
+| 框架 | 启动时间 | 内存使用 | 渲染性能 | 学习曲线 |
+|------|----------|----------|----------|----------|
+| Dioxus | 快 | 低 | 高 | 中等 |
+| Leptos | 中等 | 中等 | 高 | 中等 |
+| egui | 快 | 低 | 中等 | 低 |
+| Axum | 快 | 低 | 高 | 低 |
+| Actix Web | 中等 | 中等 | 高 | 中等 |
 
-### Tauri开发工具
+## 最佳实践
 
-```bash
-# 安装Tauri CLI
-cargo install tauri-cli
+### 1. 选择合适的框架
 
-# 开发模式
-tauri dev
+- **Web应用**: Dioxus 或 Leptos
+- **工具/调试界面**: egui
+- **Web API**: Axum 或 Actix Web
+- **企业级应用**: Actix Web
 
-# 构建生产版本
-tauri build
-```
+### 2. 性能优化
 
-## 🎨 自定义主题和样式
+- 使用适当的缓存策略
+- 优化渲染循环
+- 合理使用异步编程
+- 监控内存使用
 
-### Dioxus主题
+### 3. 代码组织
 
-```rust
-use dioxus::prelude::*;
+- 模块化设计
+- 清晰的错误处理
+- 适当的测试覆盖
+- 文档完善
 
-fn App() -> Element {
-    rsx! {
-        div { 
-            class: "dark-theme",  // 自定义CSS类
-            h1 { "我的应用" }
-        }
-    }
-}
-```
+## 故障排除
 
-### Iced主题
+### 常见问题
 
-```rust
-use iced::Theme;
+1. **编译错误**: 检查依赖版本是否匹配
+2. **运行时错误**: 查看错误日志和文档
+3. **性能问题**: 使用性能分析工具
+4. **跨平台问题**: 测试目标平台
 
-impl Application for MyApp {
-    fn theme(&self) -> Theme {
-        Theme::Dark  // 内置主题
-    }
-}
-```
+### 获取帮助
 
-### Slint主题
+- 查看框架官方文档
+- 搜索GitHub Issues
+- 参与社区讨论
+- 阅读示例代码
 
-```rust
-slint::slint! {
-    export component AppWindow inherits Window {
-        title: "我的应用";
-        // 使用内置主题
-        default-font-family: "Arial";
-    }
-}
-```
-
-## 📊 性能优化
-
-### 编译优化
-
-```toml
-# Cargo.toml
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-panic = "abort"
-```
-
-### 运行时优化
-
-```rust
-// 使用Rust 1.90的新特性
-use std::cell::Cell;
-
-let cell = Cell::new(42);
-cell.update(|x| x + 1);  // Rust 1.90新API
-```
-
-## 🐛 调试技巧
-
-### 启用调试日志
-
-```rust
-use tracing::{info, debug, error};
-
-#[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt::init();
-    
-    info!("应用启动");
-    debug!("调试信息");
-}
-```
-
-### 性能分析
-
-```bash
-# 使用cargo-flamegraph分析性能
-cargo install flamegraph
-cargo flamegraph --example my_example --features my_features
-```
-
-## 🔒 安全最佳实践
-
-### 依赖安全
-
-```bash
-# 检查依赖安全漏洞
-cargo audit
-
-# 更新依赖
-cargo update
-```
-
-### 代码安全
-
-```rust
-// 使用安全的字符串处理
-use std::borrow::Cow;
-
-fn safe_string(input: &str) -> Cow<str> {
-    if input.len() > 100 {
-        Cow::Owned(input[..100].to_string())
-    } else {
-        Cow::Borrowed(input)
-    }
-}
-```
-
-## 📚 学习资源
-
-### 官方文档
-
-- [Rust官方文档](https://doc.rust-lang.org/)
-- [Dioxus文档](https://dioxuslabs.com/)
-- [Leptos文档](https://leptos.dev/)
-- [Tauri文档](https://tauri.app/)
-- [Slint文档](https://slint-ui.com/)
-- [Iced文档](https://docs.rs/iced/)
-- [egui文档](https://docs.rs/egui/)
-
-### 社区资源
-
-- [Rust GUI工作组](https://github.com/rust-gui)
-- [Are We GUI Yet](https://areweguiyet.com/)
-- [Rust Web开发指南](https://rust-web-dev-guide.com/)
-
-### 示例项目
-
-- [Dioxus示例](https://github.com/dioxuslabs/dioxus/tree/master/examples)
-- [Leptos示例](https://github.com/leptos-rs/leptos/tree/main/examples)
-- [Tauri示例](https://github.com/tauri-apps/tauri/tree/dev/examples)
-
-## ❓ 常见问题
-
-### Q: 如何选择最适合的UI框架？
-
-A: 参考 `CROSS_PLATFORM_UI_COMPARISON_2025.md` 文档中的详细对比和选择指南。
-
-### Q: 如何在不同平台间共享代码？
-
-A: 使用条件编译和平台特定模块：
-
-```rust
-#[cfg(target_os = "windows")]
-mod windows;
-
-#[cfg(target_os = "macos")]
-mod macos;
-
-#[cfg(target_arch = "wasm32")]
-mod web;
-```
-
-### Q: 如何处理跨平台UI差异？
-
-A: 使用平台特定的样式和组件：
-
-```rust
-#[cfg(target_os = "windows")]
-const BUTTON_STYLE: &str = "windows-button";
-
-#[cfg(target_os = "macos")]
-const BUTTON_STYLE: &str = "macos-button";
-```
-
-### Q: 如何优化应用启动时间？
-
-A:
-
-1. 使用Rust 1.90的编译优化
-2. 延迟加载非关键组件
-3. 优化依赖关系
-4. 使用链接时优化(LTO)
-
-## 🤝 贡献指南
-
-### 提交代码
+## 贡献指南
 
 1. Fork项目
 2. 创建特性分支
 3. 提交更改
 4. 创建Pull Request
+5. 等待代码审查
 
-### 报告问题
+## 许可证
 
-1. 检查现有Issues
-2. 提供详细的重现步骤
-3. 包含系统信息和错误日志
+本项目使用MIT许可证。
 
-### 改进文档
+## 更新日志
 
-1. 更新相关文档
-2. 添加代码示例
-3. 改进说明的清晰度
+### 2025年1月
+
+- 更新到Rust 1.90
+- 集成最新框架版本
+- 修复编译错误
+- 完善文档
 
 ---
 
-**让Rust UI生态系统更加繁荣！** 🦀✨
-
-*最后更新: 2025年1月*-
+**注意**: 本项目展示了Rust UI开发的最新趋势和最佳实践。建议根据具体需求选择合适的框架和模式。

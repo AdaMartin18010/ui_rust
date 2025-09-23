@@ -75,13 +75,15 @@ fn App() -> Element {
                 
                 h2 {
                     style: "color: #34495e; margin-bottom: 15px;",
-                    "欢迎, {name}!"
+                    "欢迎, "
+                    {name.clone()}
+                    "!"
                 }
                 
                 input {
                     r#type: "text",
                     placeholder: "输入您的姓名",
-                    value: "{name}",
+                    value: name.clone(),
                     oninput: move |evt| name.set(evt.value()),
                     style: "padding: 8px; margin: 10px; border: 1px solid #bdc3c7; border-radius: 5px; width: 200px;"
                 }
@@ -92,7 +94,8 @@ fn App() -> Element {
                 
                 h2 {
                     style: "margin-bottom: 15px;",
-                    "计数器: {count}"
+                    "计数器: "
+                    {count.to_string()}
                 }
                 
                 div {
@@ -127,7 +130,8 @@ fn App() -> Element {
                 }
                 
                 p {
-                    "当前运行在: {get_platform()}"
+                    "当前运行在: "
+                    {get_platform().to_string()}
                 }
                 
                 p {
@@ -175,13 +179,17 @@ fn App() -> Element {
                     style: "display: flex; gap: 10px; justify-content: center; margin: 10px 0;",
                     
                     button {
-                        onclick: move |_| theme.set(match theme.get() {
-                            Theme::Light => Theme::Dark,
-                            Theme::Dark => Theme::Auto,
-                            Theme::Auto => Theme::Light,
-                        }),
+                        onclick: move |_| {
+                            let current_theme = *theme.read();
+                            theme.set(match current_theme {
+                                Theme::Light => Theme::Dark,
+                                Theme::Dark => Theme::Auto,
+                                Theme::Auto => Theme::Light,
+                            });
+                        },
                         style: "background: #d35400; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;",
-                        "🎨 切换主题: {match theme.get() { Theme::Light => "浅色", Theme::Dark => "深色", Theme::Auto => "自动" }}"
+                        "🎨 切换主题: "
+                        {match *theme.read() { Theme::Light => "浅色", Theme::Dark => "深色", Theme::Auto => "自动" }}
                     }
                 }
                 
@@ -198,11 +206,11 @@ fn App() -> Element {
                             placeholder: "添加新的待办事项...",
                             style: "padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; width: 250px;",
                             onkeypress: move |evt| {
-                                if evt.key() == "Enter" {
+                                if evt.key() == Key::Enter {
                                     // 添加新的待办事项
                                     let new_todo = TodoItem {
-                                        id: todos.get().len() as u32,
-                                        title: evt.value().to_string(),
+                                        id: todos.read().len() as u32,
+                                        title: evt.data().key().to_string(),
                                         completed: false,
                                         priority: Priority::Medium,
                                     };
@@ -215,9 +223,9 @@ fn App() -> Element {
                     div {
                         style: "max-height: 200px; overflow-y: auto;",
                         
-                        for todo in todos.get() {
+                        for todo in todos.read().clone() {
                             div {
-                                key: "{todo.id}",
+                                key: todo.id.to_string(),
                                 style: "background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;",
                                 
                                 div {
@@ -237,8 +245,16 @@ fn App() -> Element {
                                     }
                                     
                                     span {
-                                        style: "text-decoration: {if todo.completed { 'line-through' } else { 'none' }}; color: {match todo.priority { Priority::High => '#e74c3c', Priority::Medium => '#f39c12', Priority::Low => '#27ae60' }};",
-                                        "{todo.title}"
+                                        style: {
+                                            let decoration = if todo.completed { "line-through" } else { "none" };
+                                            let color = match todo.priority {
+                                                Priority::High => "#e74c3c",
+                                                Priority::Medium => "#f39c12",
+                                                Priority::Low => "#27ae60"
+                                            };
+                                            format!("text-decoration: {}; color: {};", decoration, color)
+                                        },
+                                        {todo.title.clone()}
                                     }
                                 }
                                 
@@ -304,15 +320,8 @@ fn get_platform() -> &'static str {
 }
 
 /// 主函数 - Web平台
-#[cfg(target_arch = "wasm32")]
 fn main() {
-    dioxus_web::launch(App);
-}
-
-/// 主函数 - Desktop平台
-#[cfg(not(target_arch = "wasm32"))]
-fn main() {
-    dioxus_desktop::launch::launch(App, vec![], vec![]);
+    dioxus_web::launch::launch(App, vec![], vec![]);
 }
 
 /// 测试模块

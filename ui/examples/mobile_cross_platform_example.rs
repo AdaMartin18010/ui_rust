@@ -8,7 +8,6 @@
 //! - Rust 1.90新特性集成
 
 use dioxus::prelude::*;
-use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 /// 移动应用状态
@@ -33,6 +32,7 @@ struct UserProfile {
 
 /// 用户偏好设置
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct UserPreferences {
     theme: MobileTheme,
     language: String,
@@ -43,6 +43,7 @@ struct UserPreferences {
 
 /// 用户统计
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct UserStats {
     total_sessions: u32,
     last_active: Instant,
@@ -51,7 +52,7 @@ struct UserStats {
 }
 
 /// 成就系统
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Achievement {
     id: String,
     name: String,
@@ -62,7 +63,7 @@ struct Achievement {
 }
 
 /// 通知系统
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Notification {
     id: String,
     title: String,
@@ -75,6 +76,7 @@ struct Notification {
 
 /// 通知优先级
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum NotificationPriority {
     Low,
     Medium,
@@ -83,7 +85,8 @@ enum NotificationPriority {
 }
 
 /// 通知操作类型
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum NotificationAction {
     Navigate(String),
     OpenUrl(String),
@@ -92,6 +95,7 @@ enum NotificationAction {
 
 /// 移动端设置
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MobileSettings {
     screen_orientation: ScreenOrientation,
     battery_saver: bool,
@@ -102,6 +106,7 @@ struct MobileSettings {
 
 /// 屏幕方向
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum ScreenOrientation {
     Portrait,
     Landscape,
@@ -110,6 +115,7 @@ enum ScreenOrientation {
 
 /// 无障碍设置
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AccessibilitySettings {
     high_contrast: bool,
     large_text: bool,
@@ -119,6 +125,7 @@ struct AccessibilitySettings {
 
 /// 隐私设置
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PrivacySettings {
     analytics_enabled: bool,
     crash_reporting: bool,
@@ -127,6 +134,7 @@ struct PrivacySettings {
 
 /// 移动端主题
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum MobileTheme {
     Light,
     Dark,
@@ -147,6 +155,7 @@ enum Screen {
 
 /// 移动端性能指标
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MobilePerformanceMetrics {
     fps: f32,
     memory_usage: u64,
@@ -229,7 +238,7 @@ impl Default for MobileAppState {
 }
 
 /// 主移动应用组件
-fn MobileApp() -> Element {
+fn mobile_app() -> Element {
     let mut app_state = use_signal(|| MobileAppState::default());
     
     // 移动端性能监控
@@ -247,7 +256,7 @@ fn MobileApp() -> Element {
             style: "min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;",
             
             // 状态栏
-            StatusBar { 
+            status_bar { 
                 app_state: app_state.clone()
             }
             
@@ -257,17 +266,17 @@ fn MobileApp() -> Element {
                 style: "padding: 20px;",
                 
                 match app_state.read().current_screen {
-                    Screen::Home => HomeScreen { app_state: app_state.clone() },
-                    Screen::Profile => ProfileScreen { app_state: app_state.clone() },
-                    Screen::Settings => SettingsScreen { app_state: app_state.clone() },
-                    Screen::Notifications => NotificationsScreen { app_state: app_state.clone() },
-                    Screen::Achievements => AchievementsScreen { app_state: app_state.clone() },
-                    Screen::Performance => PerformanceScreen { app_state: app_state.clone() },
+                    Screen::Home => rsx! { home_screen { app_state: app_state.clone() } },
+                    Screen::Profile => rsx! { profile_screen { app_state: app_state.clone() } },
+                    Screen::Settings => rsx! { settings_screen { app_state: app_state.clone() } },
+                    Screen::Notifications => rsx! { notifications_screen { app_state: app_state.clone() } },
+                    Screen::Achievements => rsx! { achievements_screen { app_state: app_state.clone() } },
+                    Screen::Performance => rsx! { performance_screen { app_state: app_state.clone() } },
                 }
             }
             
             // 底部导航栏
-            BottomNavigation { 
+            bottom_navigation { 
                 app_state: app_state.clone(),
                 on_screen_change: move |screen| {
                     app_state.with_mut(|state| state.current_screen = screen);
@@ -279,7 +288,7 @@ fn MobileApp() -> Element {
 
 /// 状态栏组件
 #[component]
-fn StatusBar(app_state: Signal<MobileAppState>) -> Element {
+fn status_bar(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "status-bar",
@@ -292,8 +301,13 @@ fn StatusBar(app_state: Signal<MobileAppState>) -> Element {
             div {
                 style: "display: flex; gap: 15px; align-items: center;",
                 span { "📶" }
-                span { "🔋 {app_state.read().performance_metrics.battery_usage:.1}%" }
-                span { "{chrono::Local::now().format('%H:%M')}" }
+                span { 
+                    "🔋 "
+                    {format!("{:.1}%", app_state.read().performance_metrics.battery_usage)}
+                }
+                span { 
+                    {format!("{}", chrono::Local::now().format("%H:%M"))}
+                }
             }
         }
     }
@@ -301,7 +315,7 @@ fn StatusBar(app_state: Signal<MobileAppState>) -> Element {
 
 /// 主屏幕组件
 #[component]
-fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
+fn home_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "home-screen",
@@ -335,7 +349,7 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
                 div {
                     style: "display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;",
                     
-                    QuickActionButton {
+                    quick_action_button {
                         icon: "⚙️",
                         title: "设置",
                         on_click: move || {
@@ -343,7 +357,7 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
                         }
                     }
                     
-                    QuickActionButton {
+                    quick_action_button {
                         icon: "🔔",
                         title: "通知",
                         on_click: move || {
@@ -351,7 +365,7 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
                         }
                     }
                     
-                    QuickActionButton {
+                    quick_action_button {
                         icon: "🏆",
                         title: "成就",
                         on_click: move || {
@@ -359,7 +373,7 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
                         }
                     }
                     
-                    QuickActionButton {
+                    quick_action_button {
                         icon: "📊",
                         title: "性能",
                         on_click: move || {
@@ -373,21 +387,21 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
             div {
                 style: "display: flex; flex-direction: column; gap: 15px;",
                 
-                FeatureCard {
+                feature_card {
                     title: "跨平台开发",
                     description: "使用Rust构建原生性能的移动应用",
                     icon: "🚀",
                     progress: 85
                 }
                 
-                FeatureCard {
+                feature_card {
                     title: "性能优化",
                     description: "利用Rust 1.90的性能特性",
                     icon: "⚡",
                     progress: 92
                 }
                 
-                FeatureCard {
+                feature_card {
                     title: "安全可靠",
                     description: "内存安全和类型安全保证",
                     icon: "🛡️",
@@ -400,7 +414,7 @@ fn HomeScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 快速操作按钮组件
 #[component]
-fn QuickActionButton(icon: &'static str, title: &'static str, on_click: EventHandler<()>) -> Element {
+fn quick_action_button(icon: &'static str, title: &'static str, on_click: EventHandler<()>) -> Element {
     rsx! {
         button {
             style: "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);",
@@ -424,7 +438,7 @@ fn QuickActionButton(icon: &'static str, title: &'static str, on_click: EventHan
 
 /// 功能卡片组件
 #[component]
-fn FeatureCard(title: &'static str, description: &'static str, icon: &'static str, progress: u8) -> Element {
+fn feature_card(title: &'static str, description: &'static str, icon: &'static str, progress: u8) -> Element {
     rsx! {
         div {
             style: "background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);",
@@ -468,7 +482,7 @@ fn FeatureCard(title: &'static str, description: &'static str, icon: &'static st
 
 /// 个人资料屏幕
 #[component]
-fn ProfileScreen(app_state: Signal<MobileAppState>) -> Element {
+fn profile_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "profile-screen",
@@ -496,17 +510,17 @@ fn ProfileScreen(app_state: Signal<MobileAppState>) -> Element {
                 div {
                     style: "display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;",
                     
-                    StatItem {
+                    stat_item {
                         label: "会话数",
                         value: "{app_state.read().user_profile.stats.total_sessions}"
                     }
                     
-                    StatItem {
+                    stat_item {
                         label: "成就",
                         value: "{app_state.read().user_profile.stats.achievements.len()}"
                     }
                     
-                    StatItem {
+                    stat_item {
                         label: "活跃度",
                         value: "高"
                     }
@@ -522,25 +536,25 @@ fn ProfileScreen(app_state: Signal<MobileAppState>) -> Element {
                     "偏好设置"
                 }
                 
-                PreferenceItem {
+                preference_item {
                     label: "主题",
                     value: "{app_state.read().user_profile.preferences.theme:?}",
                     icon: "🎨"
                 }
                 
-                PreferenceItem {
+                preference_item {
                     label: "语言",
                     value: "{app_state.read().user_profile.preferences.language}",
                     icon: "🌐"
                 }
                 
-                PreferenceItem {
+                preference_item {
                     label: "通知",
                     value: if app_state.read().user_profile.preferences.notifications_enabled { "开启" } else { "关闭" },
                     icon: "🔔"
                 }
                 
-                PreferenceItem {
+                preference_item {
                     label: "生物识别",
                     value: if app_state.read().user_profile.preferences.biometric_auth { "开启" } else { "关闭" },
                     icon: "🔐"
@@ -552,7 +566,7 @@ fn ProfileScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 统计项组件
 #[component]
-fn StatItem(label: &'static str, value: &'static str) -> Element {
+fn stat_item(label: &'static str, value: String) -> Element {
     rsx! {
         div {
             style: "text-align: center;",
@@ -570,7 +584,7 @@ fn StatItem(label: &'static str, value: &'static str) -> Element {
 
 /// 偏好设置项组件
 #[component]
-fn PreferenceItem(label: &'static str, value: &'static str, icon: &'static str) -> Element {
+fn preference_item(label: &'static str, value: String, icon: &'static str) -> Element {
     rsx! {
         div {
             style: "display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f0f0f0;",
@@ -597,7 +611,7 @@ fn PreferenceItem(label: &'static str, value: &'static str, icon: &'static str) 
 
 /// 通知屏幕
 #[component]
-fn NotificationsScreen(app_state: Signal<MobileAppState>) -> Element {
+fn notifications_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "notifications-screen",
@@ -611,7 +625,7 @@ fn NotificationsScreen(app_state: Signal<MobileAppState>) -> Element {
                 style: "display: flex; flex-direction: column; gap: 15px;",
                 
                 for notification in app_state.read().notifications.iter() {
-                    NotificationCard { 
+                    notification_card { 
                         notification: notification.clone(),
                         on_read: move |id| {
                             app_state.with_mut(|state| {
@@ -629,11 +643,14 @@ fn NotificationsScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 通知卡片组件
 #[component]
-fn NotificationCard(notification: Notification, on_read: EventHandler<String>) -> Element {
+fn notification_card(notification: Notification, on_read: EventHandler<String>) -> Element {
     rsx! {
         div {
             class: "notification-card",
-            style: "background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); {if !notification.read { 'border-left: 4px solid #007bff;' } else { '' }}",
+            style: {
+                let border = if !notification.read { "border-left: 4px solid #007bff;" } else { "" };
+                format!("background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); {}", border)
+            },
             
             div {
                 style: "display: flex; align-items: flex-start; gap: 15px;",
@@ -655,8 +672,11 @@ fn NotificationCard(notification: Notification, on_read: EventHandler<String>) -
                         style: "display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;",
                         
                         h4 {
-                            style: "margin: 0; color: #333; font-size: 16px; {if notification.read { 'opacity: 0.6;' } else { '' }}",
-                            "{notification.title}"
+                            style: {
+                                let opacity = if notification.read { "opacity: 0.6;" } else { "" };
+                                format!("margin: 0; color: #333; font-size: 16px; {}", opacity)
+                            },
+                            {notification.title.clone()}
                         }
                         
                         span {
@@ -666,8 +686,11 @@ fn NotificationCard(notification: Notification, on_read: EventHandler<String>) -
                     }
                     
                     p {
-                        style: "margin: 0 0 10px 0; color: #666; line-height: 1.4; {if notification.read { 'opacity: 0.6;' } else { '' }}",
-                        "{notification.message}"
+                        style: {
+                            let opacity = if notification.read { "opacity: 0.6;" } else { "" };
+                            format!("margin: 0 0 10px 0; color: #666; line-height: 1.4; {}", opacity)
+                        },
+                        {notification.message.clone()}
                     }
                     
                     if !notification.read {
@@ -685,7 +708,7 @@ fn NotificationCard(notification: Notification, on_read: EventHandler<String>) -
 
 /// 成就屏幕
 #[component]
-fn AchievementsScreen(app_state: Signal<MobileAppState>) -> Element {
+fn achievements_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "achievements-screen",
@@ -699,7 +722,7 @@ fn AchievementsScreen(app_state: Signal<MobileAppState>) -> Element {
                 style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;",
                 
                 for achievement in app_state.read().user_profile.stats.achievements.iter() {
-                    AchievementCard { achievement: achievement.clone() }
+                    achievement_card { achievement: achievement.clone() }
                 }
             }
         }
@@ -708,7 +731,7 @@ fn AchievementsScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 成就卡片组件
 #[component]
-fn AchievementCard(achievement: Achievement) -> Element {
+fn achievement_card(achievement: Achievement) -> Element {
     rsx! {
         div {
             style: "background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1);",
@@ -746,7 +769,7 @@ fn AchievementCard(achievement: Achievement) -> Element {
 
 /// 性能屏幕
 #[component]
-fn PerformanceScreen(app_state: Signal<MobileAppState>) -> Element {
+fn performance_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "performance-screen",
@@ -759,42 +782,42 @@ fn PerformanceScreen(app_state: Signal<MobileAppState>) -> Element {
             div {
                 style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;",
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "FPS",
                     value: "{app_state.read().performance_metrics.fps:.1}",
                     unit: "fps",
                     color: "#28a745"
                 }
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "内存",
                     value: "{app_state.read().performance_metrics.memory_usage}",
                     unit: "MB",
                     color: "#007bff"
                 }
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "电池",
                     value: "{app_state.read().performance_metrics.battery_usage:.1}",
                     unit: "%",
                     color: "#ffc107"
                 }
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "CPU",
                     value: "{app_state.read().performance_metrics.cpu_usage:.1}",
                     unit: "%",
                     color: "#dc3545"
                 }
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "渲染",
                     value: "{app_state.read().performance_metrics.render_time.as_millis()}",
                     unit: "ms",
                     color: "#6f42c1"
                 }
                 
-                PerformanceMetric {
+                performance_metric {
                     label: "触摸延迟",
                     value: "{app_state.read().performance_metrics.touch_latency.as_millis()}",
                     unit: "ms",
@@ -807,7 +830,7 @@ fn PerformanceScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 性能指标组件
 #[component]
-fn PerformanceMetric(label: &'static str, value: &'static str, unit: &'static str, color: &'static str) -> Element {
+fn performance_metric(label: &'static str, value: String, unit: &'static str, color: &'static str) -> Element {
     rsx! {
         div {
             style: "background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1);",
@@ -832,7 +855,7 @@ fn PerformanceMetric(label: &'static str, value: &'static str, unit: &'static st
 
 /// 设置屏幕
 #[component]
-fn SettingsScreen(app_state: Signal<MobileAppState>) -> Element {
+fn settings_screen(app_state: Signal<MobileAppState>) -> Element {
     rsx! {
         div {
             class: "settings-screen",
@@ -845,37 +868,37 @@ fn SettingsScreen(app_state: Signal<MobileAppState>) -> Element {
             div {
                 style: "background: rgba(255,255,255,0.95); padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);",
                 
-                SettingItem {
+                setting_item {
                     label: "屏幕方向",
                     value: "{app_state.read().settings.screen_orientation:?}",
                     icon: "📱"
                 }
                 
-                SettingItem {
+                setting_item {
                     label: "电池优化",
                     value: if app_state.read().settings.battery_saver { "开启" } else { "关闭" },
                     icon: "🔋"
                 }
                 
-                SettingItem {
+                setting_item {
                     label: "数据节省",
                     value: if app_state.read().settings.data_saver { "开启" } else { "关闭" },
                     icon: "📊"
                 }
                 
-                SettingItem {
+                setting_item {
                     label: "高对比度",
                     value: if app_state.read().settings.accessibility.high_contrast { "开启" } else { "关闭" },
                     icon: "👁️"
                 }
                 
-                SettingItem {
+                setting_item {
                     label: "大字体",
                     value: if app_state.read().settings.accessibility.large_text { "开启" } else { "关闭" },
                     icon: "🔍"
                 }
                 
-                SettingItem {
+                setting_item {
                     label: "屏幕阅读器",
                     value: if app_state.read().settings.accessibility.screen_reader { "开启" } else { "关闭" },
                     icon: "📢"
@@ -887,7 +910,7 @@ fn SettingsScreen(app_state: Signal<MobileAppState>) -> Element {
 
 /// 设置项组件
 #[component]
-fn SettingItem(label: &'static str, value: &'static str, icon: &'static str) -> Element {
+fn setting_item(label: &'static str, value: String, icon: &'static str) -> Element {
     rsx! {
         div {
             style: "display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0f0f0;",
@@ -919,13 +942,13 @@ fn SettingItem(label: &'static str, value: &'static str, icon: &'static str) -> 
 
 /// 底部导航栏组件
 #[component]
-fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHandler<Screen>) -> Element {
+fn bottom_navigation(app_state: Signal<MobileAppState>, on_screen_change: EventHandler<Screen>) -> Element {
     rsx! {
         nav {
             class: "bottom-navigation",
             style: "position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 10px 0; display: flex; justify-content: space-around; box-shadow: 0 -2px 20px rgba(0,0,0,0.1);",
             
-            NavItem {
+            nav_item {
                 icon: "🏠",
                 label: "首页",
                 screen: Screen::Home,
@@ -933,7 +956,7 @@ fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHa
                 on_click: move || on_screen_change.call(Screen::Home)
             }
             
-            NavItem {
+            nav_item {
                 icon: "👤",
                 label: "个人",
                 screen: Screen::Profile,
@@ -941,7 +964,7 @@ fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHa
                 on_click: move || on_screen_change.call(Screen::Profile)
             }
             
-            NavItem {
+            nav_item {
                 icon: "🔔",
                 label: "通知",
                 screen: Screen::Notifications,
@@ -949,7 +972,7 @@ fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHa
                 on_click: move || on_screen_change.call(Screen::Notifications)
             }
             
-            NavItem {
+            nav_item {
                 icon: "🏆",
                 label: "成就",
                 screen: Screen::Achievements,
@@ -957,7 +980,7 @@ fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHa
                 on_click: move || on_screen_change.call(Screen::Achievements)
             }
             
-            NavItem {
+            nav_item {
                 icon: "⚙️",
                 label: "设置",
                 screen: Screen::Settings,
@@ -970,22 +993,28 @@ fn BottomNavigation(app_state: Signal<MobileAppState>, on_screen_change: EventHa
 
 /// 导航项组件
 #[component]
-fn NavItem(icon: &'static str, label: &'static str, screen: Screen, current_screen: Screen, on_click: EventHandler<()>) -> Element {
+fn nav_item(icon: &'static str, label: &'static str, screen: Screen, current_screen: Screen, on_click: EventHandler<()>) -> Element {
     let is_active = screen == current_screen;
     
     rsx! {
         button {
-            style: "background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; cursor: pointer; color: {if is_active { '#007bff' } else { '#666' }}; transition: color 0.2s;",
+            style: {
+                let color = if is_active { "#007bff" } else { "#666" };
+                format!("background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; cursor: pointer; color: {}; transition: color 0.2s;", color)
+            },
             onclick: move |_| on_click.call(()),
             
             div {
                 style: "font-size: 20px;",
-                "{icon}"
+                {icon}
             }
             
             div {
-                style: "font-size: 10px; font-weight: {if is_active { 'bold' } else { 'normal' }};",
-                "{label}"
+                style: {
+                    let weight = if is_active { "bold" } else { "normal" };
+                    format!("font-size: 10px; font-weight: {};", weight)
+                },
+                {label}
             }
         }
     }
@@ -994,5 +1023,5 @@ fn NavItem(icon: &'static str, label: &'static str, screen: Screen, current_scre
 /// 主函数
 fn main() {
     // 启动移动端Dioxus应用
-    dioxus_web::launch(MobileApp);
+    dioxus_web::launch::launch(mobile_app, vec![], vec![]);
 }

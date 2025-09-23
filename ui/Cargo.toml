@@ -33,24 +33,44 @@ tokio = { workspace = true }
 # async-std 已移除，使用 tokio 替代 (async-std 已弃用)
 
 # 2025年最新前端框架 - 跨平台UI (Rust 1.90优化版)
-dioxus = { version = "0.6", optional = true }
-dioxus-web = { version = "0.6", optional = true }
-dioxus-desktop = { version = "0.6", optional = true }
-leptos = { version = "0.7", optional = true }
-leptos_axum = { version = "0.7", optional = true }
+# Dioxus: React-like跨平台UI框架，支持Web、Desktop、Mobile
+# 特性: 声明式组件、虚拟DOM、热重载、类型安全
+# 性能: 高性能渲染、内存安全、零运行时开销
+dioxus = { workspace = true, optional = true }
+dioxus-web = { workspace = true, optional = true }
+# dioxus-desktop = { workspace = true, optional = true }  # 暂时禁用，存在版本冲突
+
+# Leptos: 现代Web框架，零运行时开销
+# 特性: 细粒度响应式、SSR支持、编译时优化
+# 性能: 接近原生JavaScript性能、极小包大小
+leptos = { workspace = true, optional = true }
+leptos_axum = { workspace = true, optional = true }
 
 # 2025年最新原生GUI框架 - Slint 1.5 (Rust 1.90优化)
-slint = { version = "1.5", optional = true }
+# Slint: 原生性能GUI框架，专为嵌入式设备设计
+# 特性: 声明式UI、原生渲染、低内存占用、跨平台支持
+# 性能: 原生性能、极小内存占用、快速启动
+slint = { workspace = true, optional = true }
 
 # 2025年最新桌面应用框架 - Tauri 2.0 (完全跨平台)
-tauri = { version = "2.0", optional = true }
-tauri-build = { version = "2.0", optional = true }
+# Tauri: 轻量级桌面应用框架，比Electron小10倍以上
+# 特性: 系统集成、安全性、跨平台、原生性能
+# 性能: 轻量级、高安全性、原生系统API访问
+tauri = { workspace = true, optional = true }
+tauri-build = { workspace = true, optional = true }
 
 # 2025年现代化GUI框架 - Iced 0.12 (Rust 1.90优化)
-iced = { version = "0.12", features = ["tokio"], optional = true }
+# Iced: Elm启发的声明式GUI框架
+# 特性: 函数式编程、数据驱动、类型安全、跨平台
+# 性能: 清晰架构、易于维护、现代化设计
+iced = { workspace = true, optional = true }
 
 # 2025年即时模式GUI - egui 0.27 (Rust 1.90优化)
-egui = { version = "0.27", features = ["persistence"], optional = true }
+# egui: 即时模式GUI框架，适合工具和调试界面
+# 特性: 简单API、即时模式、跨平台、快速开发
+# 性能: 快速原型、易于集成、中等性能开销
+egui = { workspace = true, optional = true }
+eframe = { version = "0.32.3", optional = true }
 
 # 2025年最新高性能异步运行时 - 暂时禁用，Windows构建问题
 # glommio = { workspace = true, optional = true }
@@ -70,6 +90,14 @@ dotenvy = { workspace = true }
 # 序列化
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+# 企业级应用依赖
+uuid = { workspace = true }
+reqwest = { workspace = true, optional = true }
+async-trait = "0.1"
+env_logger = { version = "0.11", optional = true }
+rand = { workspace = true }
+chrono = { workspace = true }
 bincode = { workspace = true }
 rmp-serde = { version = "1.3.0", optional = true }
 
@@ -87,12 +115,8 @@ proptest = { workspace = true, optional = true }
 # 日志 - 使用工作区统一版本
 tracing = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
-env_logger = { version = "0.11.8", optional = true }
 
 # 其他工具
-uuid = { workspace = true }
-chrono = { workspace = true }
-reqwest = { workspace = true, optional = true }
 
 # 安全相关
 jsonwebtoken = { version = "9.3.1", optional = true }
@@ -148,12 +172,12 @@ chrono = []
 
 # 2025年最新框架特性 (Rust 1.90优化版)
 dioxus = ["dep:dioxus", "dep:dioxus-web"]
-dioxus-full = ["dep:dioxus", "dep:dioxus-web", "dep:dioxus-desktop"]  # 完整跨平台支持
+# dioxus-full = ["dep:dioxus", "dep:dioxus-web", "dep:dioxus-desktop"]  # 暂时禁用，存在版本冲突
 leptos = ["dep:leptos", "dep:leptos_axum"]
 tauri = ["dep:tauri", "dep:tauri-build"]
 slint = ["dep:slint"]
 iced = ["dep:iced"]
-egui = ["dep:egui"]
+egui = ["dep:egui", "dep:eframe"]
 
 # 组合特性 - 基于Rust 1.90优化
 modern-ui = ["dioxus", "leptos"]  # 现代Web UI框架
@@ -285,6 +309,11 @@ name = "dioxus_advanced_example"
 path = "examples/dioxus_advanced_example.rs"
 required-features = ["dioxus"]
 
+[[bench]]
+name = "performance_benchmarks"
+path = "benches/performance_benchmarks.rs"
+required-features = ["criterion"]
+
 [[example]]
 name = "mobile_cross_platform_example"
 path = "examples/mobile_cross_platform_example.rs"
@@ -306,6 +335,33 @@ path = "examples/accessibility_example.rs"
 required-features = ["dioxus"]
 
 [[example]]
+name = "enterprise_architecture_example"
+path = "examples/enterprise_architecture_example.rs"
+required-features = ["tokio", "serde"]
+
+[[example]]
+name = "microservices_architecture_example"
+path = "examples/microservices_architecture_example.rs"
+required-features = ["tokio", "serde"]
+
+[[example]]
+name = "realtime_communication_example"
+path = "examples/realtime_communication_example.rs"
+required-features = ["tokio", "serde"]
+
+[[example]]
 name = "dns_via_netclient"
 path = "examples/dns_via_netclient.rs"
 required-features = ["tokio"]
+
+# Rust 1.90 新特性示例
+[[example]]
+name = "rust_1_90_features_example"
+path = "examples/rust_1_90_features_example.rs"
+required-features = ["tokio", "serde", "chrono"]
+
+# 现代化UI组件库示例
+[[example]]
+name = "modern_ui_components_example"
+path = "examples/modern_ui_components_example.rs"
+required-features = ["tokio", "serde", "chrono"]

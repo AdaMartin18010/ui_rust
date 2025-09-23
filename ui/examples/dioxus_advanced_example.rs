@@ -25,6 +25,7 @@ struct AppState {
 
 /// 性能指标 - Rust 1.90性能监控
 #[derive(Debug, Clone)]
+#[derive(PartialEq)]
 struct PerformanceMetrics {
     render_count: u32,
     last_render_time: Duration,
@@ -159,7 +160,7 @@ impl Default for AppState {
 }
 
 /// 主应用组件
-fn App() -> Element {
+fn app() -> Element {
     let mut app_state = use_signal(|| AppState::default());
     
     // 性能监控 - 利用Rust 1.90的性能特性
@@ -171,7 +172,7 @@ fn App() -> Element {
         // 更新性能指标
         app_state.with_mut(|state| {
             state.performance_metrics.render_count += 1;
-            state.performance_metrics.last_render_time = render_start.duration_since(start_time.read());
+            state.performance_metrics.last_render_time = render_start.duration_since(*start_time.read());
         });
     });
 
@@ -181,7 +182,7 @@ fn App() -> Element {
             style: "min-height: 100vh; padding: 20px;",
             
             // 头部
-            Header { 
+            header { 
                 app_state: app_state.clone(),
                 on_theme_change: move |theme| {
                     app_state.with_mut(|state| state.theme = theme);
@@ -194,7 +195,7 @@ fn App() -> Element {
                 style: "display: flex; gap: 20px; margin-top: 20px;",
                 
                 // 侧边栏
-                Sidebar { 
+                sidebar { 
                     app_state: app_state.clone(),
                     on_filter_change: move |filter| {
                         app_state.with_mut(|state| state.filter = filter);
@@ -206,9 +207,9 @@ fn App() -> Element {
                     class: "content-area",
                     style: "flex: 1;",
                     
-                    TodoList { 
+                    todo_list { 
                         app_state: app_state.clone(),
-                        on_todo_update: move |id, updates| {
+                        on_todo_update: move |id, updates: TodoUpdates| {
                             app_state.with_mut(|state| {
                                 if let Some(todo) = state.todos.iter_mut().find(|t| t.id == id) {
                                     if let Some(title) = updates.title {
@@ -232,7 +233,7 @@ fn App() -> Element {
             }
             
             // 底部性能信息
-            PerformancePanel { 
+            performance_panel { 
                 metrics: app_state.read().performance_metrics.clone()
             }
         }
@@ -241,7 +242,7 @@ fn App() -> Element {
 
 /// 头部组件
 #[component]
-fn Header(app_state: Signal<AppState>, on_theme_change: EventHandler<Theme>) -> Element {
+fn header(app_state: Signal<AppState>, on_theme_change: EventHandler<Theme>) -> Element {
     rsx! {
         header {
             class: "app-header",
@@ -292,7 +293,7 @@ fn Header(app_state: Signal<AppState>, on_theme_change: EventHandler<Theme>) -> 
 
 /// 侧边栏组件
 #[component]
-fn Sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilter>) -> Element {
+fn sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilter>) -> Element {
     rsx! {
         aside {
             class: "sidebar",
@@ -304,21 +305,21 @@ fn Sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilte
                 class: "filter-buttons",
                 style: "display: flex; flex-direction: column; gap: 8px; margin-top: 10px;",
                 
-                FilterButton { 
+                filter_button { 
                     filter: TodoFilter::All,
                     current_filter: app_state.read().filter.clone(),
                     label: "全部",
                     on_click: move || on_filter_change.call(TodoFilter::All)
                 }
                 
-                FilterButton { 
+                filter_button { 
                     filter: TodoFilter::Active,
                     current_filter: app_state.read().filter.clone(),
                     label: "进行中",
                     on_click: move || on_filter_change.call(TodoFilter::Active)
                 }
                 
-                FilterButton { 
+                filter_button { 
                     filter: TodoFilter::Completed,
                     current_filter: app_state.read().filter.clone(),
                     label: "已完成",
@@ -330,7 +331,7 @@ fn Sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilte
                 style: "margin-top: 20px;",
                 h4 { "优先级过滤" }
                 
-                PriorityFilter { 
+                priority_filter { 
                     app_state: app_state.clone(),
                     on_filter_change: move |filter| on_filter_change.call(filter)
                 }
@@ -340,7 +341,7 @@ fn Sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilte
                 style: "margin-top: 20px;",
                 h4 { "标签统计" }
                 
-                TagStats { 
+                tag_stats { 
                     todos: app_state.read().todos.clone()
                 }
             }
@@ -350,22 +351,26 @@ fn Sidebar(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilte
 
 /// 过滤按钮组件
 #[component]
-fn FilterButton(filter: TodoFilter, current_filter: TodoFilter, label: &'static str, on_click: EventHandler<()>) -> Element {
+fn filter_button(filter: TodoFilter, current_filter: TodoFilter, label: &'static str, on_click: EventHandler<()>) -> Element {
     let is_active = filter == current_filter;
     
     rsx! {
         button {
             class: if is_active { "filter-btn active" } else { "filter-btn" },
-            style: "padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: {if is_active { '#007bff' } else { '#e9ecef' }}; color: {if is_active { 'white' } else { 'black' }};",
+            style: {
+                let bg_color = if is_active { "#007bff" } else { "#e9ecef" };
+                let text_color = if is_active { "white" } else { "black" };
+                format!("padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: {}; color: {};", bg_color, text_color)
+            },
             onclick: move |_| on_click.call(()),
-            "{label}"
+            {label}
         }
     }
 }
 
 /// 优先级过滤组件
 #[component]
-fn PriorityFilter(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilter>) -> Element {
+fn priority_filter(app_state: Signal<AppState>, on_filter_change: EventHandler<TodoFilter>) -> Element {
     rsx! {
         div {
             style: "display: flex; flex-direction: column; gap: 5px;",
@@ -383,7 +388,7 @@ fn PriorityFilter(app_state: Signal<AppState>, on_filter_change: EventHandler<To
 
 /// 标签统计组件
 #[component]
-fn TagStats(todos: Vec<TodoItem>) -> Element {
+fn tag_stats(todos: Vec<TodoItem>) -> Element {
     let mut tag_counts: HashMap<String, u32> = HashMap::new();
     
     for todo in todos {
@@ -409,14 +414,14 @@ fn TagStats(todos: Vec<TodoItem>) -> Element {
 
 /// 待办事项列表组件
 #[component]
-fn TodoList(app_state: Signal<AppState>, on_todo_update: EventHandler<(u32, TodoUpdates)>) -> Element {
+fn todo_list(app_state: Signal<AppState>, on_todo_update: EventHandler<(u32, TodoUpdates)>) -> Element {
     let filtered_todos = use_memo(move || {
         let state = app_state.read();
-        match state.filter {
+        match &state.filter {
             TodoFilter::All => state.todos.clone(),
             TodoFilter::Active => state.todos.iter().filter(|t| !t.completed).cloned().collect(),
             TodoFilter::Completed => state.todos.iter().filter(|t| t.completed).cloned().collect(),
-            TodoFilter::Priority(priority) => state.todos.iter().filter(|t| t.priority == priority).cloned().collect(),
+            TodoFilter::Priority(priority) => state.todos.iter().filter(|t| t.priority == *priority).cloned().collect(),
             TodoFilter::Tag(tag) => state.todos.iter().filter(|t| t.tags.contains(&tag)).cloned().collect(),
         }
     });
@@ -430,7 +435,7 @@ fn TodoList(app_state: Signal<AppState>, on_todo_update: EventHandler<(u32, Todo
                 
                 h2 { "待办事项 ({filtered_todos.read().len()})" }
                 
-                AddTodoButton { 
+                add_todo_button { 
                     on_add: move |todo| {
                         app_state.with_mut(|state| {
                             let new_id = state.todos.iter().map(|t| t.id).max().unwrap_or(0) + 1;
@@ -444,8 +449,8 @@ fn TodoList(app_state: Signal<AppState>, on_todo_update: EventHandler<(u32, Todo
                 class: "todos-container",
                 style: "display: flex; flex-direction: column; gap: 12px;",
                 
-                for todo in filtered_todos.read().iter() {
-                    TodoCard { 
+                for todo in filtered_todos.read().clone() {
+                    todo_card { 
                         todo: todo.clone(),
                         on_update: move |updates| on_todo_update.call((todo.id, updates))
                     }
@@ -457,7 +462,7 @@ fn TodoList(app_state: Signal<AppState>, on_todo_update: EventHandler<(u32, Todo
 
 /// 添加待办事项按钮
 #[component]
-fn AddTodoButton(on_add: EventHandler<TodoItem>) -> Element {
+fn add_todo_button(on_add: EventHandler<TodoItem>) -> Element {
     let mut show_form = use_signal(|| false);
     let mut new_title = use_signal(|| String::new());
     let mut new_description = use_signal(|| String::new());
@@ -465,7 +470,7 @@ fn AddTodoButton(on_add: EventHandler<TodoItem>) -> Element {
     
     rsx! {
         div {
-            if show_form.read() {
+            if *show_form.read() {
                 div {
                     class: "add-todo-form",
                     style: "background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;",
@@ -525,7 +530,7 @@ fn AddTodoButton(on_add: EventHandler<TodoItem>) -> Element {
                                         title: new_title.read().clone(),
                                         description: new_description.read().clone(),
                                         completed: false,
-                                        priority: new_priority.read(),
+                                        priority: *new_priority.read(),
                                         tags: vec![],
                                         created_at: Instant::now(),
                                         updated_at: Instant::now(),
@@ -563,11 +568,14 @@ struct TodoUpdates {
 
 /// 待办事项卡片组件
 #[component]
-fn TodoCard(todo: TodoItem, on_update: EventHandler<TodoUpdates>) -> Element {
+fn todo_card(todo: TodoItem, on_update: EventHandler<TodoUpdates>) -> Element {
     rsx! {
         div {
             class: "todo-card",
-            style: "background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid {todo.priority.color()};",
+            style: {
+                let priority_color = todo.priority.color();
+                format!("background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid {};", priority_color)
+            },
             
             div {
                 style: "display: flex; align-items: flex-start; gap: 15px;",
@@ -636,7 +644,7 @@ fn TodoCard(todo: TodoItem, on_update: EventHandler<TodoUpdates>) -> Element {
 
 /// 性能面板组件
 #[component]
-fn PerformancePanel(metrics: PerformanceMetrics) -> Element {
+fn performance_panel(metrics: PerformanceMetrics) -> Element {
     rsx! {
         div {
             class: "performance-panel",
@@ -681,5 +689,5 @@ fn PerformancePanel(metrics: PerformanceMetrics) -> Element {
 /// 主函数
 fn main() {
     // 启动Dioxus应用
-    dioxus_web::launch(App);
+    dioxus_web::launch::launch(app, vec![], vec![]);
 }

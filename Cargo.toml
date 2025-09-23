@@ -112,9 +112,9 @@ crossterm = "0.29.0"
 # 2025年最新前端框架 - 跨平台UI (移除GTK3依赖)
 dioxus = "0.6.3"
 dioxus-web = "0.6.3"
-# dioxus-desktop = "0.6.0"  # 暂时禁用，存在GTK3安全漏洞
-leptos = "0.6.15"
-leptos_axum = "0.6.15"
+dioxus-desktop = "0.6.3"
+leptos = "0.7.3"
+leptos_axum = "0.7.3"
 
 # 2025年最新桌面应用框架 (Tauri 2.0已解决GTK3安全漏洞)
 tauri = "2.8.5"
@@ -237,7 +237,11 @@ petgraph = "0.8.2"
 # Web 和 GUI 框架 - 2025年1月最新稳定版本
 # tauri 已移除，使用 egui/iced 替代 (解决 GTK3 安全漏洞)
 egui = "0.32.3"
+eframe = "0.32.3"
 iced = "0.13.1"
+
+# 2025年最新原生GUI框架 - Slint 1.5
+slint = "1.5.2"
 
 # 2025年最新深度学习框架
 # burn = "0.10.0"  # 暂时禁用，存在版本兼容性问题
