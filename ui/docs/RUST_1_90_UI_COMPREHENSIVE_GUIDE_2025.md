@@ -1,1025 +1,613 @@
-# Rust 1.90 UI框架完整指南 2025
+# Rust 1.90 UI 全面指南 2025
 
-## 📋 目录
+> 版本: v1.0（Rust 1.90 对齐） 最后更新：2025-09
 
-## 🎯 概述
+## 目录
 
-本指南全面介绍了Rust 1.90版本与最新UI框架的结合使用，为开发者提供完整的跨平台UI开发解决方案。结合最新的开源库、成熟的架构模式和先进的设计理念，构建高性能、安全、可维护的现代应用程序。
+1. 概览与目标
+2. Rust 1.90 关键语言/库特性
+3. UI 框架生态与选型原则
+4. 推荐技术栈组合（Web/桌面/移动）
+5. 架构模式与分层设计
+6. 组件与组合式程序设计
+7. 状态管理与数据流
+8. 异步与并发模型（UI 场景）
+9. 可访问性与国际化
+10. 性能优化与基准
+11. 测试策略与可观测性
+12. 安全、权限与供应链
+13. 构建与部署流水线
+14. 进阶专题与最佳实践
+15. 附录：代码片段与清单
+16. 可运行示例与命令清单（新增）
+17. 架构目录骨架与代码映射清单（新增）
+18. Tauri 权限与安全清单（新增）
+19. i18n 与 a11y 落地规范（新增）
+20. 性能优化检查表与基准流程（新增）
+21. 各UI框架快速模板与脚手架（新增）
+22. 工程基线与 MSRV 策略（新增）
+23. 错误处理与 UX 契约（新增）
+24. WebAssembly/WASI 与 UI 互操作（新增）
+25. 状态与数据同步（离线优先）（新增）
+26. 架构落地清单与依赖方向守卫（新增）
+27. 选型矩阵：成熟度/性能/生态（新增）
+28. 迁移指南：升级到 Rust 1.90（新增）
+29. 依赖与 features 建议（新增）
+30. 常见陷阱与排障手册（新增）
 
-### 核心价值
+---
 
-- **🚀 性能优先**: 利用Rust 1.90的性能优化和零成本抽象
-- **🛡️ 内存安全**: 编译时保证内存安全，避免运行时错误
-- **🌐 跨平台**: 一套代码，多平台部署
-- **🔧 现代化**: 采用最新的架构模式和设计理念
-- **📚 完整生态**: 涵盖从开发到部署的完整工具链
+## 1. 概览与目标
 
-## 🆕 Rust 1.90新特性
+面向在 Rust 1.90 生态下构建 Web/桌面/移动 UI 的团队，提供成熟方案、工程化落地路径与可复制的组件设计方法，强调高性能、可维护、可观测与安全。
 
-### 语言特性增强
+## 2. Rust 1.90 关键语言/库特性
 
-#### 1. 改进的异步编程
+- Cell::update（稳定）：更安全、简洁地原位更新内部值，适合 UI 局部可变状态。
+- HashMap::extract_if（稳定）：高效筛选/迁移条目，适合 UI 缓存与索引维护。
+- 模式匹配增强与 let-else：减少样板分支，提高可读性与错误处理一致性。
+- 异步生态增强：结合 `tokio`/`futures` 构建后台任务与 I/O，不阻塞 UI 渲染线程。
 
-```rust
-// Rust 1.90 优化的异步语法
-async fn enhanced_async_example() -> Result<String, Box<dyn std::error::Error>> {
-    // 改进的Future trait性能
-    let result = tokio::time::timeout(
-        Duration::from_secs(5),
-        fetch_data().await
-    ).await??;
-    
-    Ok(result)
-}
-```
-
-#### 2. 增强的模式匹配
-
-```rust
-// 更强大的模式匹配
-fn advanced_pattern_matching(value: &str) -> Option<u32> {
-    match value {
-        s if s.starts_with("0x") => {
-            u32::from_str_radix(&s[2..], 16).ok()
-        }
-        s if s.starts_with("0b") => {
-            u32::from_str_radix(&s[2..], 2).ok()
-        }
-        s => s.parse().ok()
-    }
-}
-```
-
-#### 3. 新API稳定化
+示例：Cell::update 与 extract_if
 
 ```rust
 use std::cell::Cell;
 use std::collections::HashMap;
 
-// Cell::update - 原子更新
-let cell = Cell::new(42);
-let new_value = cell.update(|current| current * 2);
-
-// HashMap::extract_if - 条件性提取
-let mut map = HashMap::new();
-map.insert("key1", 1);
-map.insert("key2", 2);
-let extracted: HashMap<_, _> = map.extract_if(|k, _| k.starts_with("key")).collect();
-```
-
-## 🎨 UI框架生态系统
-
-### 框架分类
-
-#### Web UI框架
-
-- **Dioxus 0.6**: 跨平台React-like框架
-- **Leptos 0.7**: 高性能Web框架
-- **Yew 0.21**: 成熟的WebAssembly框架
-
-#### 桌面GUI框架
-
-- **Tauri 2.0**: 现代桌面应用框架
-- **Slint 1.5**: 原生高性能GUI
-- **Iced 0.13**: 声明式GUI库
-- **egui 0.32**: 即时模式GUI
-
-#### 移动端框架
-
-- **Dioxus Mobile**: 跨平台移动UI
-- **Tauri Mobile**: 移动端支持
-
-### 框架选择矩阵
-
-| 需求场景 | 推荐框架 | 理由 |
-|---------|---------|------|
-| 跨平台Web应用 | Dioxus | React-like，学习成本低 |
-| 高性能Web应用 | Leptos | 零运行时开销 |
-| 桌面应用 | Tauri | 体积小，安全性高 |
-| 原生桌面应用 | Slint | 原生性能，低内存 |
-| 工具界面 | egui | 简单易用，快速开发 |
-| 移动应用 | Dioxus Mobile | 跨平台，代码复用 |
-
-## 🔍 框架详细对比
-
-### Dioxus 0.6 - 跨平台UI框架
-
-#### 核心特性
-
-- ✅ 类似React的组件模型
-- ✅ 跨平台支持 (Web, Desktop, Mobile)
-- ✅ 热重载开发体验
-- ✅ 类型安全的属性系统
-- ✅ 响应式状态管理
-
-#### 架构设计
-
-```rust
-use dioxus::prelude::*;
-
-#[component]
-fn TodoApp() -> Element {
-    let mut todos = use_signal(|| Vec::<TodoItem>::new());
-    let mut new_todo = use_signal(|| String::new());
-
-    rsx! {
-        div {
-            class: "todo-app",
-            
-            h1 { "待办事项" }
-            
-            div {
-                class: "input-section",
-                input {
-                    r#type: "text",
-                    placeholder: "添加新任务...",
-                    value: "{new_todo}",
-                    oninput: move |evt| new_todo.set(evt.value()),
-                    onkeypress: move |evt| {
-                        if evt.key() == Key::Enter && !new_todo.get().is_empty() {
-                            todos.write().push(TodoItem {
-                                id: uuid::Uuid::new_v4(),
-                                text: new_todo.get().clone(),
-                                completed: false,
-                            });
-                            new_todo.set(String::new());
-                        }
-                    }
-                }
-                button {
-                    onclick: move |_| {
-                        if !new_todo.get().is_empty() {
-                            todos.write().push(TodoItem {
-                                id: uuid::Uuid::new_v4(),
-                                text: new_todo.get().clone(),
-                                completed: false,
-                            });
-                            new_todo.set(String::new());
-                        }
-                    },
-                    "添加"
-                }
-            }
-            
-            div {
-                class: "todo-list",
-                for todo in todos.read().iter() {
-                    TodoItem { key: "{todo.id}", todo: todo.clone() }
-                }
-            }
-        }
-    }
+fn cell_update_example() {
+    let clicks = Cell::new(0);
+    clicks.update(|c| *c += 1);
 }
 
-#[derive(Clone, Debug)]
-struct TodoItem {
-    id: uuid::Uuid,
-    text: String,
-    completed: bool,
-}
-
-#[component]
-fn TodoItem(todo: TodoItem) -> Element {
-    let mut completed = use_signal(|| todo.completed);
-    
-    rsx! {
-        div {
-            class: "todo-item",
-            input {
-                r#type: "checkbox",
-                checked: completed,
-                onchange: move |evt| completed.set(evt.checked()),
-            }
-            span {
-                class: if completed.get() { "completed" } else { "" },
-                "{todo.text}"
-            }
-        }
-    }
+fn extract_if_example() {
+    let mut cache: HashMap<String, usize> = HashMap::from([
+        ("btn".into(), 10),
+        ("list".into(), 0),
+    ]);
+    let removed: Vec<_> = cache.extract_if(|_, v| *v == 0).collect();
+    assert!(removed.iter().any(|(k, _)| k == "list"));
 }
 ```
 
-### Leptos 0.7 - 高性能Web框架
+## 3. UI 框架生态与选型原则
 
-#### 核心特性1
+- Web：Dioxus（DX 友好）、Leptos（极致性能）、Yew（成熟稳健）。
+- 桌面：Tauri（轻量外壳/强安全模型）、Slint（原生渲染/低内存）、egui（即时模式）、Iced（声明式）。
+- 移动：Dioxus Mobile（多端 UI）、Tauri Mobile（系统能力与分发通道）。
 
-- ✅ 细粒度响应式系统
-- ✅ 服务端渲染支持
-- ✅ 零运行时开销
-- ✅ 优秀的开发体验
-- ✅ 类型安全
+选型优先级：
 
-#### 架构设计1
+- 需求贴合 > 团队经验 > 生态活跃度 > 可维护性 > 长期演进路径。
+
+## 4. 推荐技术栈组合（Web/桌面/移动）
+
+- Web（WASM）：Leptos + Axum + Vite/Trunk + `tracing` + OpenTelemetry
+- 桌面：Tauri + 内嵌 Axum/IPC + `tracing` + Sentry SDK + 权限白名单
+- 原生 GUI：Slint + tokio + anyhow/thiserror + `pprof-rs`
+- 移动：Tauri Mobile 或 Dioxus Mobile + 后端 Axum + OTA 更新策略
+
+## 5. 架构模式与分层设计
+
+- 分层/六边形/洋葱架构：`domain`（业务）、`application`（用例）、`infrastructure`（外设）、`ui`（适配）。
+- 依赖倒置：`ui` 依赖抽象接口，不直接耦合具体实现，便于多前端共用业务内核。
+- 事件驱动：UI 发出意图 → 应用层处理 → 状态变更 → 视图渲染。
+
+目录建议：
+
+```text
+src/
+  ui/               # 视图与组件
+  app/              # 用例服务（应用服务）
+  domain/           # 领域模型与规则
+  infra/            # 存储、网络、MQ 等适配
+```
+
+## 6. 组件与组合式程序设计
+
+- 粒度：原子组件（按钮/输入）、复合组件（表单/对话框/列表）。
+- 组合：以属性（props）与回调组合功能；避免深层继承，倾向组合优于继承。
+- 不变式：组件输入保持纯净；副作用集中在 effect/hook；严格区分容器与展示组件。
+
+Leptos 示例（简化）：
 
 ```rust
 use leptos::*;
 
 #[component]
-fn Counter() -> impl IntoView {
+pub fn Counter() -> impl IntoView {
     let (count, set_count) = create_signal(0);
-    let double_count = move || count.get() * 2;
-
     view! {
-        <div class="counter">
-            <button on:click=move |_| set_count.update(|n| *n += 1)>
-                "点击次数: " {count}
-            </button>
-            <p>"双倍计数: " {double_count}</p>
-        </div>
+        <button on:click=move |_| set_count.update(|c| *c += 1)>
+            {move || count.get()}
+        </button>
     }
 }
+```
+
+## 7. 状态管理与数据流
+
+- 局部状态：`Cell::update`、`RefCell`、框架自带 `Signal`/`Atom`。
+- 全局状态：`Arc<RwLock<T>>` 或框架提供的上下文注入（context/provider）。
+- 单向数据流：意图 Intent → 动作 Action → 状态 State → 视图 View。
+- 切片化更新：尽量缩小重渲染粒度，使用选择器或派生信号。
+
+## 8. 异步与并发模型（UI 场景）
+
+- 后台任务：`tokio::spawn`、`JoinSet` 聚合；UI 线程专注渲染。
+- I/O 隔离：网络/磁盘 I/O 在 runtime，结果通过 channel/Signal 回传。
+- 取消与超时：`tokio::time::timeout`、`tokio_util::sync::CancellationToken`。
+- 去抖/节流：对快速输入与滚动交互进行节制，减少重渲染。
+
+## 9. 可访问性与国际化
+
+- a11y：语义化组件、键盘导航、颜色对比度、焦点环与可视顺序一致。
+- i18n：抽象文案字典，运行时切换语言与区域格式；数字/日期本地化。
+
+## 10. 性能优化与基准
+
+- 编译：`lto=true`、`codegen-units=1`、`opt-level=z`、`panic=abort`。
+- 运行时：避免不必要的重渲染；差分更新；虚拟列表与窗口化渲染。
+- 基准：`criterion`、`cargo bench`；`-Zself-profile`、`pprof-rs` 取火焰图。
+
+## 11. 测试策略与可观测性
+
+- 单元测试：领域与应用服务优先；mock 外设。
+- 组件测试：快照 + 交互事件；对关键交互写回归测试。
+- 端到端：`tauri-driver`/浏览器驱动/`wasm-bindgen-test`。
+- 可观测性：`tracing` + OpenTelemetry；链路追踪贯穿 UI 与后端。
+
+## 12. 安全、权限与供应链
+
+- Tauri：CSP、命令权限白名单、API 封装与最小授权。
+- 供应链：`cargo deny`、`cargo audit`、依赖许可与漏洞扫描。
+- 数据安全：敏感信息最小化存储，使用系统安全存储与加密。
+
+## 13. 构建与部署流水线
+
+- CI：fmt + clippy + test + audit + build + package。
+- Web：WASM 构建（Trunk/Vite）+ 静态资源 CDN 发布。
+- 桌面/移动：Tauri 打包与签名；渠道发布（MSIX/DMG/IPA/APK）。
+
+## 14. 进阶专题与最佳实践
+
+- 插件化体系：命令/事件作为扩展点；插件注册与沙箱隔离。
+- 主题与外观：系统暗黑模式；Design Tokens 与多主题切换。
+- 离线优先：本地缓存与冲突合并策略；增量同步。
+
+## 15. 附录：代码片段与清单
+
+- Rust 1.90 API 索引（Cell/HashMap 等）。
+- VSCode/rust-analyzer 最佳配置样例。
+- Cargo profiles 与 `.cargo/config.toml` 模板清单。
+
+## 16. 可运行示例与命令清单（新增）
+
+### 16.1 Leptos（WASM）
+
+```bash
+# 构建与运行（Trunk）
+cargo install trunk wasm-bindgen-cli --locked
+trunk serve --open
+
+# 构建生产包
+trunk build --release
+```
+
+关键片段（组件+路由示例）：
+
+```rust
+use leptos::*;
+use leptos_router::*;
+
+#[component]
+fn Home() -> impl IntoView { view!{ <h1>"Home"</h1> } }
 
 #[component]
 fn App() -> impl IntoView {
     view! {
-        <main>
-            <h1>"Leptos 0.7 示例"</h1>
-            <Counter />
-        </main>
+        <Router>
+            <Routes>
+                <Route path="/" view=Home />
+            </Routes>
+        </Router>
     }
-}
-
-fn main() {
-    leptos::mount_to_body(App)
 }
 ```
 
-### Tauri 2.0 - 现代桌面应用框架
+### 16.2 Dioxus（Web/Desktop/Mobile）
 
-#### 核心特性2
+```bash
+# CLI
+cargo install dioxus-cli --locked
+# Web 开发
+dx serve
+# 构建
+dx build --release
+```
 
-- ✅ 比Electron更小的体积
-- ✅ 更高的性能
-- ✅ 支持iOS和Android
-- ✅ 更好的安全性
-- ✅ 原生系统集成
-
-#### 架构设计2
+组件示例：
 
 ```rust
-use tauri::Manager;
+use dioxus::prelude::*;
 
-#[tauri::command]
-async fn greet(name: &str) -> Result<String, String> {
-    Ok(format!("Hello, {}! You've been greeted from Rust!", name))
-}
-
-#[tauri::command]
-async fn get_system_info() -> Result<SystemInfo, String> {
-    Ok(SystemInfo {
-        os: std::env::consts::OS.to_string(),
-        arch: std::env::consts::ARCH.to_string(),
-        version: env!("CARGO_PKG_VERSION").to_string(),
+fn app(cx: Scope) -> Element {
+    let count = use_state(cx, || 0);
+    cx.render(rsx!{
+        button { onclick: move |_| count += 1, "{count}" }
     })
 }
-
-#[derive(serde::Serialize)]
-struct SystemInfo {
-    os: String,
-    arch: String,
-    version: String,
-}
-
-fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, get_system_info])
-        .setup(|app| {
-            // 应用初始化逻辑
-            let window = app.get_window("main").unwrap();
-            window.set_title("Tauri 2.0 应用").unwrap();
-            Ok(())
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
 ```
 
-### Slint 1.5 - 原生高性能GUI
+### 16.3 Tauri（桌面/移动）
 
-#### 核心特性3
+```bash
+# 安装 CLI
+cargo install tauri-cli --locked
+# 开发调试
+yarn tauri dev  # 或 npm/pnpm 对应命令
+# 桌面打包
+cargo tauri build
+# 移动构建（需平台SDK）
+cargo tauri android build
+cargo tauri ios build
+```
 
-- ✅ 原生性能，低内存占用
-- ✅ 支持多平台
-- ✅ 嵌入式设备支持
-- ✅ 类型安全的声明式UI
-- ✅ C++和JavaScript绑定
+安全要点：在 `tauri.conf.json` 中限制 `allowlist` 与 `protocols`，开启 CSP。
 
-#### 架构设计3
+### 16.4 Slint（原生 GUI）
+
+```bash
+# 运行示例
+cargo run --example slint_example --features slint
+# 发布构建
+cargo build --release --features slint
+```
+
+UI 片段：
 
 ```rust
-use slint::SharedString;
-
 slint::slint! {
-    import { Button, VerticalBox, HorizontalBox, LineEdit, Text, StandardButton } from "std-widgets.slint";
-
-    export component AppWindow inherits Window {
-        title: "Slint 1.5 高级示例";
-        width: 600px;
-        height: 400px;
-        
-        property <string> input-text: "";
-        property <[string]> todo-items: [];
-        property <int> item-counter: 0;
-        
-        callback add-todo();
-        callback remove-todo(int);
-        callback toggle-todo(int);
-        
-        VerticalBox {
-            Text {
-                text: "待办事项管理器";
-                font-size: 24px;
-                horizontal-alignment: TextHorizontalAlignment::Center;
-            }
-            
-            HorizontalBox {
-                LineEdit {
-                    text: root.input-text;
-                    placeholder-text: "输入新任务...";
-                }
-                
-                Button {
-                    text: "添加";
-                    clicked => {
-                        root.add-todo();
-                    }
-                }
-            }
-            
-            for todo-item in root.todo-items: VerticalBox {
-                HorizontalBox {
-                    Text {
-                        text: todo-item;
-                        vertical-alignment: TextVerticalAlignment::Center;
-                    }
-                    
-                    Button {
-                        text: "删除";
-                        clicked => {
-                            root.remove-todo(index);
-                        }
-                    }
-                }
-            }
-        }
+    export component App inherits Window {
+        Text { text: "Hello, Slint"; }
     }
-}
-
-fn main() -> Result<(), slint::PlatformError> {
-    let app = AppWindow::new()?;
-    
-    let app_weak = app.as_weak();
-    app.on_add_todo(move || {
-        let app = app_weak.unwrap();
-        let input_text = app.get_input_text();
-        
-        if !input_text.is_empty() {
-            let mut items = app.get_todo_items().iter().map(|s| s.to_string()).collect::<Vec<_>>();
-            items.push(input_text.to_string());
-            app.set_todo_items(items.into_iter().map(|s| s.into()).collect());
-            app.set_input_text("".into());
-            app.set_item_counter(app.get_item_counter() + 1);
-        }
-    });
-    
-    let app_weak = app.as_weak();
-    app.on_remove_todo(move |index| {
-        let app = app_weak.unwrap();
-        let mut items = app.get_todo_items().iter().map(|s| s.to_string()).collect::<Vec<_>>();
-        if (index as usize) < items.len() {
-            items.remove(index as usize);
-            app.set_todo_items(items.into_iter().map(|s| s.into()).collect());
-            app.set_item_counter(app.get_item_counter() - 1);
-        }
-    });
-    
-    app.run()
 }
 ```
 
-## 🏗️ 架构设计模式
+### 16.5 egui（即时模式）
 
-### 1. 组件化架构
+```bash
+# 运行示例
+cargo run --example egui_example --features egui
+```
 
-#### 组件设计原则
+片段：
 
 ```rust
-// 基础组件trait
-pub trait Component {
-    type Props;
-    type State;
-    
-    fn render(&self, props: &Self::Props, state: &Self::State) -> Element;
-    fn update(&mut self, props: &Self::Props, state: &mut Self::State);
-}
-
-// 高阶组件
-pub struct WithLoading<C: Component> {
-    component: C,
-    loading: bool,
-}
-
-impl<C: Component> Component for WithLoading<C> {
-    type Props = C::Props;
-    type State = C::State;
-    
-    fn render(&self, props: &Self::Props, state: &Self::State) -> Element {
-        if self.loading {
-            rsx! { div { "加载中..." } }
-        } else {
-            self.component.render(props, state)
-        }
-    }
-    
-    fn update(&mut self, props: &Self::Props, state: &mut Self::State) {
-        self.component.update(props, state);
-    }
+fn ui(ui: &mut egui::Ui, count: &mut i32) {
+    if ui.button("+1").clicked() { *count += 1; }
+    ui.label(format!("count = {}", count));
 }
 ```
 
-### 2. 状态管理模式
+### 16.6 测试与基准
 
-#### 全局状态管理
+```bash
+# 单元/集成测试
+cargo test
+# 基准
+cargo bench
+```
+
+### 16.7 可观测性 & 诊断
 
 ```rust
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use tracing::{info, instrument};
 
-pub struct AppState {
-    pub user: Option<User>,
-    pub todos: Vec<Todo>,
-    pub theme: Theme,
-}
-
-pub type SharedState = Arc<RwLock<AppState>>;
-
-pub struct StateManager {
-    state: SharedState,
-}
-
-impl StateManager {
-    pub fn new() -> Self {
-        Self {
-            state: Arc::new(RwLock::new(AppState {
-                user: None,
-                todos: Vec::new(),
-                theme: Theme::Light,
-            })),
-        }
-    }
-    
-    pub async fn add_todo(&self, todo: Todo) -> Result<(), Box<dyn std::error::Error>> {
-        let mut state = self.state.write().await;
-        state.todos.push(todo);
-        Ok(())
-    }
-    
-    pub async fn get_todos(&self) -> Vec<Todo> {
-        let state = self.state.read().await;
-        state.todos.clone()
-    }
-}
+#[instrument]
+fn compute() { info!("start"); /* ... */ }
 ```
 
-### 3. 事件驱动架构
-
-#### 事件系统
-
-```rust
-use std::collections::HashMap;
-use tokio::sync::mpsc;
-
-pub enum AppEvent {
-    UserLogin(User),
-    UserLogout,
-    TodoAdded(Todo),
-    TodoCompleted(uuid::Uuid),
-    ThemeChanged(Theme),
-}
-
-pub struct EventBus {
-    subscribers: HashMap<String, Vec<mpsc::UnboundedSender<AppEvent>>>,
-}
-
-impl EventBus {
-    pub fn new() -> Self {
-        Self {
-            subscribers: HashMap::new(),
-        }
-    }
-    
-    pub fn subscribe(&mut self, event_type: &str) -> mpsc::UnboundedReceiver<AppEvent> {
-        let (sender, receiver) = mpsc::unbounded_channel();
-        self.subscribers
-            .entry(event_type.to_string())
-            .or_insert_with(Vec::new)
-            .push(sender);
-        receiver
-    }
-    
-    pub fn publish(&self, event: AppEvent) {
-        let event_type = match &event {
-            AppEvent::UserLogin(_) => "user.login",
-            AppEvent::UserLogout => "user.logout",
-            AppEvent::TodoAdded(_) => "todo.added",
-            AppEvent::TodoCompleted(_) => "todo.completed",
-            AppEvent::ThemeChanged(_) => "theme.changed",
-        };
-        
-        if let Some(subscribers) = self.subscribers.get(event_type) {
-            for subscriber in subscribers {
-                let _ = subscriber.send(event.clone());
-            }
-        }
-    }
-}
+```bash
+# 运行时查看日志
+RUST_LOG=info cargo run
 ```
 
-## 📚 最佳实践指南
+## 17. 架构目录骨架与代码映射清单（新增）
 
-### 1. 代码组织
+- 目标：让 UI、应用用例、领域模型、基础设施四层职责清晰、依赖方向单向。
+- 约束：`ui -> app -> domain`（只向内依赖），`infra` 作为外设实现供 `app/domain` 注入。
 
-#### 项目结构
+目录骨架：
 
 ```text
 src/
-├── components/          # UI组件
-│   ├── common/         # 通用组件
-│   ├── forms/          # 表单组件
-│   └── layout/         # 布局组件
-├── pages/              # 页面组件
-├── hooks/              # 自定义钩子
-├── services/           # 业务服务
-├── stores/             # 状态管理
-├── types/              # 类型定义
-├── utils/              # 工具函数
-└── main.rs             # 应用入口
+  ui/
+    components/         # 纯视图组件（展示/受控）
+    pages/              # 页面/路由
+    services/           # UI 适配服务（请求组装、DTO 映射）
+  app/
+    usecases/           # 应用服务/用例（协调领域对象）
+    ports/              # 端口接口（仓储/消息/网关抽象）
+  domain/
+    model/              # 领域实体/值对象/聚合
+    services/           # 领域服务（纯业务规则）
+  infra/
+    adapters/           # 适配器（DB/HTTP/MQ 实现）
+    repositories/       # 仓储实现
+    telemetry/          # 日志/追踪/指标
 ```
 
-### 2. 错误处理
+代码映射：
 
-#### 统一错误处理
+- UI 调用 `app::usecases::*` 并只接触 DTO/Command，不直接引入领域实体。
+- `app::ports::*` 定义仓储/网关接口；`infra::*` 提供实现并在组合根注入。
+- 领域层不依赖任何框架，仅标准库与必要的无状态工具。
+
+## 18. Tauri 权限与安全清单（新增）
+
+- 配置 `tauri.conf.json`：
+  - 限制 `allowlist`（fs、shell、dialog 等仅按需启用）。
+  - 明确 `protocols` 自定义协议；禁用不必要的 `assetScope`。
+  - 启用 CSP，默认拒绝内联脚本，使用 nonce/hash。
+- 命令隔离：
+  - Rust 侧 `tauri::command` 最小授权；校验输入与来源。
+  - 前端仅通过安全 IPC 调用；避免直接暴露系统 API。
+- 更新机制：
+  - 校验签名与来源；使用 HTTPS 与签名校验的更新源。
+- 依赖与构建：
+  - `cargo deny`/`cargo audit` 持续检查；锁定版本与供应链来源。
+- 数据保护：
+  - 使用系统安全存储；持久化数据加密；最小化敏感信息驻留时间。
+
+## 19. i18n 与 a11y 落地规范（新增）
+
+- i18n：
+  - 文案集中在字典（JSON/多语言资源）；避免硬编码。
+  - 运行时语言切换；日期/货币/数字本地化格式。
+  - 方向性（LTR/RTL）与区域特性适配。
+- a11y：
+  - 语义标签（role/aria-*）；键盘可达性（Tab/Enter/Esc）。
+  - 焦点管理与可见焦点环；颜色对比度符合 WCAG AA。
+  - 动画可减弱（prefers-reduced-motion）与可缩放文本。
+
+## 20. 性能优化检查表与基准流程（新增）
+
+检查表：
+
+- 构建配置：release + `lto=true`、`codegen-units=1`、`opt-level=z`、`panic=abort`。
+- 资源加载：按需加载/懒加载；静态资源指纹与缓存头。
+- 渲染优化：避免不必要重渲染；虚拟列表/窗口化；大数据量分页/分块。
+- 状态粒度：将热点状态切片化；使用派生信号减少依赖传播。
+- 并发：`JoinSet`/批处理 I/O；限流与退避；避免阻塞 UI 线程。
+- 观测：`tracing` 关键路径埋点；错误率/耗时/分位数指标。
+
+基准流程：
+
+```bash
+# 1) 编写 criterion 基准
+cargo add criterion --dev
+# 2) 运行
+cargo bench
+# 3) 自分析与火焰图（本地）
+cargo install flamegraph
+cargo flamegraph --root
+```
+
+定位热点：
+
+- 使用 `-Zself-profile`（夜间 rustc）或 `pprof-rs` 捕获 CPU/内存热点。
+- 分析 UI 交互路径：事件 → 渲染 → 提交帧，找出最大瓶颈并针对性优化。
+
+## 21. 各UI框架快速模板与脚手架（新增）
+
+### 21.1 Leptos 模板
+
+```bash
+# 新建项目（推荐）
+cargo generate --git https://github.com/leptos-rs/leptos --name my-leptos-app
+# 开发
+trunk serve --open
+# 构建
+trunk build --release
+```
+
+入口（main.rs）：
 
 ```rust
-use thiserror::Error;
+use leptos::*;
+use my_leptos_app::app::App;
 
-#[derive(Error, Debug)]
-pub enum AppError {
-    #[error("网络错误: {0}")]
-    Network(#[from] reqwest::Error),
-    
-    #[error("数据库错误: {0}")]
-    Database(#[from] sqlx::Error),
-    
-    #[error("验证错误: {0}")]
-    Validation(String),
-    
-    #[error("未授权访问")]
-    Unauthorized,
-    
-    #[error("资源未找到")]
-    NotFound,
-}
-
-pub type AppResult<T> = Result<T, AppError>;
-
-// 错误处理中间件
-pub async fn handle_error(error: AppError) -> impl IntoResponse {
-    match error {
-        AppError::Network(_) => {
-            (StatusCode::BAD_GATEWAY, "网络连接失败").into_response()
-        }
-        AppError::Database(_) => {
-            (StatusCode::INTERNAL_SERVER_ERROR, "数据库错误").into_response()
-        }
-        AppError::Validation(msg) => {
-            (StatusCode::BAD_REQUEST, msg).into_response()
-        }
-        AppError::Unauthorized => {
-            (StatusCode::UNAUTHORIZED, "未授权访问").into_response()
-        }
-        AppError::NotFound => {
-            (StatusCode::NOT_FOUND, "资源未找到").into_response()
-        }
-    }
+#[tokio::main]
+async fn main() {
+    leptos::mount_to_body(|| view! { <App/> })
 }
 ```
 
-### 3. 性能优化
+### 21.2 Dioxus 模板
 
-#### 组件优化
+```bash
+# 新建
+cargo install dioxus-cli --locked
+dx new my-dx-app --template fullstack
+# 开发
+dx serve
+# 构建
+dx build --release
+```
+
+入口：
 
 ```rust
 use dioxus::prelude::*;
+fn main() { dioxus::desktop::launch(app); }
+fn app(cx: Scope) -> Element { cx.render(rsx!{ div{"Hello"} }) }
+```
 
-// 使用memo避免不必要的重新渲染
-#[component]
-fn ExpensiveComponent(data: Vec<ExpensiveData>) -> Element {
-    let memoized_data = use_memo(move || {
-        // 昂贵的计算
-        data.iter().map(|item| process_item(item)).collect::<Vec<_>>()
+### 21.3 Tauri 模板（前端可选）
+
+```bash
+# 新建（使用官方脚手架）
+cargo install create-tauri-app --locked
+create-tauri-app my-tauri --manager pnpm --template vanilla
+# 开发
+yarn tauri dev
+# 打包
+cargo tauri build
+```
+
+Rust 入口：
+
+```rust
+#[tauri::command]
+fn ping() -> String { "pong".into() }
+
+fn main() {
+  tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![ping])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
+}
+```
+
+### 21.4 Slint 模板
+
+```bash
+cargo add slint
+# 运行
+cargo run --features slint
+```
+
+入口：
+
+```rust
+slint::slint! { export component App inherits Window { Text { text: "Hello"; } } }
+fn main(){ App::new().unwrap().run().unwrap(); }
+```
+
+### 21.5 egui 模板（eframe）
+
+```bash
+cargo add eframe egui --features eframe/native
+cargo run
+```
+
+入口：
+
+```rust
+fn main() -> eframe::Result<()> {
+  eframe::run_native(
+    "egui-app",
+    eframe::NativeOptions::default(),
+    Box::new(|_| Box::<MyApp>::default()),
+  )
+}
+
+#[derive(Default)]
+struct MyApp { count: i32 }
+impl eframe::App for MyApp {
+  fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    egui::CentralPanel::default().show(ctx, |ui| {
+      if ui.button("+1").clicked() { self.count += 1; }
+      ui.label(format!("count = {}", self.count));
     });
-    
-    rsx! {
-        div {
-            for item in memoized_data.read().iter() {
-                ExpensiveItem { key: "{item.id}", data: item.clone() }
-            }
-        }
-    }
-}
-
-// 懒加载组件
-#[component]
-fn LazyComponent() -> Element {
-    let should_render = use_signal(|| false);
-    
-    rsx! {
-        div {
-            button {
-                onclick: move |_| should_render.set(true),
-                "加载内容"
-            }
-            
-            if should_render.get() {
-                HeavyComponent {}
-            }
-        }
-    }
+  }
 }
 ```
 
-## 🚀 性能优化策略
+## 22. 工程基线与 MSRV 策略（新增）
 
-### 1. 渲染优化
+目标：统一工程下限（MSRV = Minimum Supported Rust Version）与团队工程基线，确保在 Rust 1.90 版本对齐的同时，允许有节奏地前向升级。
 
-#### 虚拟化列表
+- 建议 MSRV：1.74+（如需使用 1.90 特性作为硬要求，则 MSRV=1.90）。
+- 原则：构建链路固定 MSRV，开发链路可使用更高 stable；CI 强制校验。
 
-```rust
-use dioxus::prelude::*;
-
-#[component]
-fn VirtualizedList(items: Vec<ListItem>) -> Element {
-    let container_height = use_signal(|| 400.0);
-    let item_height = use_signal(|| 50.0);
-    let scroll_top = use_signal(|| 0.0);
-    
-    let visible_count = (container_height.get() / item_height.get()).ceil() as usize;
-    let start_index = (scroll_top.get() / item_height.get()).floor() as usize;
-    let end_index = (start_index + visible_count).min(items.len());
-    
-    rsx! {
-        div {
-            style: "height: {container_height}px; overflow-y: auto;",
-            onscroll: move |evt| {
-                scroll_top.set(evt.scroll_top());
-            },
-            
-            div {
-                style: "height: {items.len() as f64 * item_height.get()}px; position: relative;",
-                
-                div {
-                    style: "position: absolute; top: {start_index as f64 * item_height.get()}px;",
-                    
-                    for (index, item) in items[start_index..end_index].iter().enumerate() {
-                        div {
-                            key: "{item.id}",
-                            style: "height: {item_height}px;",
-                            "{item.content}"
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
-
-### 2. 内存优化
-
-#### 智能指针使用
-
-```rust
-use std::sync::Arc;
-use std::rc::Rc;
-
-// 多线程共享数据使用Arc
-pub struct SharedData {
-    data: Arc<Vec<u8>>,
-}
-
-// 单线程共享数据使用Rc
-pub struct LocalData {
-    data: Rc<Vec<u8>>,
-}
-
-// 避免不必要的克隆
-pub fn process_large_data(data: &[u8]) -> Vec<u8> {
-    // 使用引用而不是克隆
-    data.iter().map(|&x| x * 2).collect()
-}
-```
-
-## 🌐 跨平台开发
-
-### 1. 条件编译
-
-#### 平台特定代码
-
-```rust
-#[cfg(target_os = "windows")]
-mod windows {
-    pub fn get_system_info() -> String {
-        "Windows系统".to_string()
-    }
-}
-
-#[cfg(target_os = "macos")]
-mod macos {
-    pub fn get_system_info() -> String {
-        "macOS系统".to_string()
-    }
-}
-
-#[cfg(target_os = "linux")]
-mod linux {
-    pub fn get_system_info() -> String {
-        "Linux系统".to_string()
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-mod web {
-    pub fn get_system_info() -> String {
-        "Web环境".to_string()
-    }
-}
-
-pub fn get_platform_info() -> String {
-    #[cfg(target_os = "windows")]
-    return windows::get_system_info();
-    
-    #[cfg(target_os = "macos")]
-    return macos::get_system_info();
-    
-    #[cfg(target_os = "linux")]
-    return linux::get_system_info();
-    
-    #[cfg(target_arch = "wasm32")]
-    return web::get_system_info();
-    
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux", target_arch = "wasm32")))]
-    return "未知平台".to_string();
-}
-```
-
-### 2. 响应式设计
-
-#### 自适应布局
-
-```rust
-use dioxus::prelude::*;
-
-#[component]
-fn ResponsiveLayout() -> Element {
-    let screen_size = use_signal(|| ScreenSize::Desktop);
-    
-    rsx! {
-        div {
-            class: "responsive-container",
-            
-            match screen_size.get() {
-                ScreenSize::Mobile => MobileLayout {},
-                ScreenSize::Tablet => TabletLayout {},
-                ScreenSize::Desktop => DesktopLayout {},
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-enum ScreenSize {
-    Mobile,
-    Tablet,
-    Desktop,
-}
-```
-
-## 🔒 安全性和测试
-
-### 1. 安全最佳实践
-
-#### 输入验证
-
-```rust
-use validator::{Validate, ValidationError};
-
-#[derive(Debug, Validate)]
-pub struct UserInput {
-    #[validate(email)]
-    pub email: String,
-    
-    #[validate(length(min = 8, max = 100))]
-    pub password: String,
-    
-    #[validate(custom = "validate_username")]
-    pub username: String,
-}
-
-fn validate_username(username: &str) -> Result<(), ValidationError> {
-    if username.chars().any(|c| !c.is_alphanumeric()) {
-        return Err(ValidationError::new("用户名只能包含字母和数字"));
-    }
-    Ok(())
-}
-
-pub fn validate_user_input(input: &UserInput) -> Result<(), validator::ValidationErrors> {
-    input.validate()
-}
-```
-
-### 2. 测试策略
-
-#### 单元测试
-
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_user_validation() {
-        let valid_user = UserInput {
-            email: "test@example.com".to_string(),
-            password: "password123".to_string(),
-            username: "testuser".to_string(),
-        };
-        
-        assert!(validate_user_input(&valid_user).is_ok());
-    }
-    
-    #[test]
-    fn test_invalid_email() {
-        let invalid_user = UserInput {
-            email: "invalid-email".to_string(),
-            password: "password123".to_string(),
-            username: "testuser".to_string(),
-        };
-        
-        assert!(validate_user_input(&invalid_user).is_err());
-    }
-}
-```
-
-#### 集成测试
-
-```rust
-#[cfg(test)]
-mod integration_tests {
-    use super::*;
-    
-    #[tokio::test]
-    async fn test_user_creation_flow() {
-        let app = create_test_app().await;
-        
-        let user_data = UserInput {
-            email: "test@example.com".to_string(),
-            password: "password123".to_string(),
-            username: "testuser".to_string(),
-        };
-        
-        let response = app.create_user(user_data).await;
-        assert!(response.is_ok());
-        
-        let user = response.unwrap();
-        assert_eq!(user.email, "test@example.com");
-    }
-}
-```
-
-## 📦 部署和发布
-
-### 1. 构建配置
-
-#### Cargo.toml优化
+建议的 Cargo 配置（`Cargo.toml` 片段）：
 
 ```toml
 [package]
-name = "rust-ui-app"
-version = "0.1.0"
-edition = "2021"
+rust-version = "1.90"
 
 [profile.release]
 lto = true
 codegen-units = 1
+opt-level = "z"
 panic = "abort"
 strip = true
-opt-level = "z"
 
-[dependencies]
-# 根据选择的框架添加依赖
-dioxus = { version = "0.6", features = ["web", "desktop"] }
-tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
+[profile.dev]
+incremental = true
+
+[workspace.metadata.msrv]
+msrv = "1.90"
 ```
 
-### 2. CI/CD配置
+建议的 `.cargo/config.toml`（统一编译与 RUSTFLAGS）：
 
-#### GitHub Actions
+```toml
+[build]
+target-dir = "target"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-cpu=native"]
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "target-cpu=native"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "target-cpu=apple-m1"]
+```
+
+CI（GitHub Actions）建议：
 
 ```yaml
-name: Build and Test
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+name: ci
+on: [push, pull_request]
 jobs:
-  test:
+  build-test:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        components: rustfmt, clippy
-    
-    - name: Run tests
-      run: cargo test --verbose
-    
-    - name: Run clippy
-      run: cargo clippy -- -D warnings
-    
-    - name: Check formatting
-      run: cargo fmt -- --check
-
-  build:
-    needs: test
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    
+        rust: [1.90.0]
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    
-    - name: Build
-      run: cargo build --release
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: clippy,rustfmt
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - run: cargo fetch --locked
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test --all --locked --features ""
+      - run: cargo build --all --release --locked
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-deny --locked
+      - run: cargo install cargo-audit --locked
+      - run: cargo deny check licenses bans advisories sources
+      - run: cargo audit --db ~/advisory-db
 ```
 
-## 🔮 未来发展趋势
+依赖与版本锁定：
 
-### 1. 技术趋势
+- 使用 `cargo update -w -Zminimal-versions`（在可控场景）验证下界。
+- 生产分支固定 `Cargo.lock`，分阶段升级依赖并跑回归。
 
-#### WebAssembly集成
+Windows/WSL/跨平台注意：
 
-- 更好的WASM性能
-- 更丰富的Web API支持
-- 跨平台代码复用
+- Tauri/Slint/egui 在 Windows 下使用 MSVC 工具链；CI 额外覆盖 macOS 与 Linux。
+- WASM 目标建议启用 `wasm32-unknown-unknown` 并通过 Trunk/Vite 构建。
 
-#### AI集成
+可视化基线验证：
 
-- 智能代码生成
-- 自动化测试
-- 性能优化建议
+- 在应用首页暴露 `About/Diagnostics` 面板，显示 Rust 版本、构建 commit、feature 开关。
 
-### 2. 生态系统发展
+落地检查表：
 
-#### 新框架涌现
-
-- 更轻量级的UI框架
-- 专业化的领域框架
-- 更好的开发工具
-
-#### 工具链完善
-
-- 更好的调试工具
-- 性能分析工具
-- 自动化部署工具
-
-## 📖 总结
-
-本指南全面介绍了Rust 1.90与最新UI框架的结合使用，为开发者提供了：
-
-1. **完整的技术栈**: 从语言特性到框架选择
-2. **实用的架构模式**: 可复用的设计模式
-3. **最佳实践指南**: 经过验证的开发方法
-4. **性能优化策略**: 提升应用性能的技巧
-5. **跨平台解决方案**: 一套代码多平台部署
-
-通过遵循本指南的建议和实践，开发者可以构建出高性能、安全、可维护的现代UI应用程序。
-
----
-
-*最后更新: 2025年1月*  
-*版本: v1.0*  
-*适用Rust版本: 1.90+*
+- 已设置 `rust-version`、CI 锁定 1.90、Clippy 零警告、audit/deny 通过。
+- release 配置 LTO/codegen-units=1，二进制开启 strip。
+- 关键目标平台能成功构建与运行。

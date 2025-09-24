@@ -1,19 +1,38 @@
 # Rust UI框架项目 - 快速开始指南 2025
 
-## 🚀 快速开始
+> 版本: v1.1（更新至 Rust 1.90），最后更新：2025-09
 
-本指南将帮助您在5分钟内开始使用Rust 1.90和最新的UI框架进行开发。
+## 目录
 
-## 📋 前置要求
+1. 快速开始
+2. 前置要求
+3. 选择您的开发路径
+4. 开发环境设置
+5. 学习路径
+6. 框架选择指南
+7. 开发工具配置
+8. 性能优化建议
+9. 测试和调试
+10. 部署指南
+11. 获取帮助
+12. 下一步
 
-### 系统要求
+---
+
+## 1. 🚀 快速开始
+
+本指南将帮助您在5分钟内开始使用 Rust 1.90 和最新的 UI 框架进行开发。
+
+## 2. 📋 前置要求
+
+### 2.1 系统要求
 
 - **Rust 1.90+**: 最新版本的Rust编译器
 - **操作系统**: Windows 10+, macOS 10.15+, Ubuntu 18.04+
 - **内存**: 至少4GB RAM
 - **存储**: 至少2GB可用空间
 
-### 安装Rust
+### 2.2 安装Rust
 
 ```bash
 # 安装Rust (如果尚未安装)
@@ -26,9 +45,9 @@ rustup update
 rustc --version  # 应该显示 1.90.0 或更高版本
 ```
 
-## 🎯 选择您的开发路径
+## 3. 🎯 选择您的开发路径
 
-### 路径1: Web应用开发
+### 3.1 路径1: Web应用开发
 
 适合：Web应用、跨平台应用、快速原型开发
 
@@ -40,7 +59,7 @@ cargo run --example dioxus_example --features dioxus
 cargo run --example leptos_simple_example --features leptos
 ```
 
-### 路径2: 桌面应用开发
+### 3.2 路径2: 桌面应用开发
 
 适合：原生桌面应用、系统工具、高性能应用
 
@@ -55,7 +74,7 @@ cargo run --example slint_example --features slint
 cargo run --example egui_example --features egui
 ```
 
-### 路径3: 移动应用开发
+### 3.3 路径3: 移动应用开发
 
 适合：跨平台移动应用、移动端工具
 
@@ -64,16 +83,16 @@ cargo run --example egui_example --features egui
 cargo run --example mobile_cross_platform_example --features dioxus
 ```
 
-## 🛠️ 开发环境设置
+## 4. 🛠️ 开发环境设置
 
-### 1. 克隆项目
+### 4.1 克隆项目
 
 ```bash
 git clone <repository-url>
 cd ui_rust/ui
 ```
 
-### 2. 安装依赖
+### 4.2 安装依赖
 
 ```bash
 # 安装所有依赖
@@ -83,7 +102,7 @@ cargo build
 cargo build --features "dioxus,leptos,tauri"
 ```
 
-### 3. 运行示例
+### 4.3 运行示例
 
 ```bash
 # 查看所有可用示例
@@ -93,9 +112,9 @@ cargo run --example
 cargo run --example <example_name> --features <feature_name>
 ```
 
-## 📚 学习路径
+## 5. 📚 学习路径
 
-### 初学者路径 (1-2周)
+### 5.1 初学者路径 (1-2周)
 
 #### 第1天: 了解Rust 1.90新特性
 
@@ -106,22 +125,22 @@ cargo run --example rust_1_90_features_example
 
 **学习内容**:
 
-- Cell::update的使用
-- HashMap::extract_if的应用
-- 增强的模式匹配
-- 改进的异步编程
+- Cell::update 的使用（1.90 稳定）
+- HashMap::extract_if 的应用（1.90 稳定）
+- let-else与更强的模式匹配（巩固）
+- 改进的异步编程与 Pin/Send/Sync 实践
 
 #### 第2-3天: 选择UI框架
 
 根据您的需求选择框架：
 
-**Web应用**: Dioxus
+**Web应用**: Dioxus / Leptos / Yew
 
 ```bash
 cargo run --example dioxus_example --features dioxus
 ```
 
-**桌面应用**: Tauri
+**桌面应用**: Tauri / Slint / egui / Iced
 
 ```bash
 cargo run --example tauri_example --features tauri
@@ -142,10 +161,10 @@ cargo run --example modern_ui_components_example
 
 **学习内容**:
 
-- 组件设计模式
-- 状态管理
-- 事件处理
-- 响应式设计
+- 组件设计模式（容器/展示、受控/非受控）
+- 状态管理（单向数据流、Signal/Atom、全局状态隔离）
+- 事件处理（批量更新、合成事件）
+- 响应式设计（媒体查询、容器查询）
 
 #### 第6-7天: 实践项目
 
@@ -156,7 +175,7 @@ cargo run --example modern_ui_components_example
 - 文件管理器
 - 聊天应用
 
-### 中级开发者路径 (2-4周)
+### 5.2 中级开发者路径 (2-4周)
 
 #### 第1周: 架构模式学习
 
@@ -170,10 +189,10 @@ cargo run --example microservices_architecture_example
 
 **学习内容**:
 
-- 分层架构
-- 依赖注入
-- 事件驱动架构
-- CQRS模式
+- 分层/六边形/洋葱架构
+- 依赖注入（构造注入 + trait 对象）
+- 事件驱动与消息总线（MQ/Kafka/NATS 接入）
+- CQRS + Event Sourcing（面向读写分离）
 
 #### 第2周: 性能优化
 
@@ -187,10 +206,10 @@ cargo bench
 
 **学习内容**:
 
-- 性能分析
-- 内存优化
-- 缓存策略
-- 并发处理
+- 性能分析（`-Zself-profile`、`pprof-rs`）
+- 内存优化（arena/slotmap/小对象优化）
+- 缓存策略（LRU/ARC、分片锁）
+- 并发处理（`tokio::task::JoinSet`、`rayon`）
 
 #### 第3周: 跨平台开发
 
@@ -201,9 +220,9 @@ cargo run --example mobile_cross_platform_example
 
 **学习内容**:
 
-- 平台特定代码
+- 平台特定代码（`cfg(target_os)`）
 - 响应式设计
-- 条件编译
+- 条件编译与特性开关
 - 部署策略
 
 #### 第4周: 高级特性
@@ -215,12 +234,12 @@ cargo run --example advanced_ui_patterns_example
 
 **学习内容**:
 
-- 高级组件模式
-- 状态管理优化
-- 性能监控
-- 错误处理
+- 高级组件模式（可组合性、Render Props、Hooks/Signals）
+- 状态管理优化（避免重渲染、diff/skip策略）
+- 性能监控（Tracing、OpenTelemetry）
+- 错误处理（`thiserror`/`anyhow` 分层）
 
-### 高级开发者路径 (1-2个月)
+### 5.3 高级开发者路径 (1-2个月)
 
 #### 第1个月: 深度定制
 
@@ -236,9 +255,9 @@ cargo run --example advanced_ui_patterns_example
 - 社区建设
 - 技术分享
 
-## 🎨 框架选择指南
+## 6. 🎨 框架选择指南
 
-### 根据需求选择框架
+### 6.1 根据需求选择框架
 
 #### Web应用开发
 
@@ -264,9 +283,9 @@ cargo run --example advanced_ui_patterns_example
 | 跨平台 | Dioxus Mobile | 一套代码多平台 |
 | 原生集成 | Tauri Mobile | 系统API访问 |
 
-## 🔧 开发工具配置
+## 7. 🔧 开发工具配置
 
-### VS Code配置
+### 7.1 VS Code配置
 
 ```json
 {
@@ -276,14 +295,14 @@ cargo run --example advanced_ui_patterns_example
 }
 ```
 
-### 推荐插件
+### 7.2 推荐插件
 
 - **rust-analyzer**: Rust语言支持
 - **CodeLLDB**: 调试支持
 - **Better TOML**: TOML文件支持
 - **Thunder Client**: API测试
 
-### Cargo配置
+### 7.3 Cargo配置
 
 ```toml
 # .cargo/config.toml
@@ -294,9 +313,9 @@ rustflags = ["-C", "target-cpu=native"]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 ```
 
-## 📊 性能优化建议
+## 8. 📊 性能优化建议
 
-### 编译优化
+### 8.1 编译优化
 
 ```toml
 # Cargo.toml
@@ -308,16 +327,16 @@ strip = true
 opt-level = "z"
 ```
 
-### 运行时优化
+### 8.2 运行时优化
 
 - 使用`#[inline(always)]`标记热路径函数
 - 使用`#[cold]`标记冷路径函数
 - 利用分支预测优化
 - 合理使用缓存策略
 
-## 🧪 测试和调试
+## 9. 🧪 测试和调试
 
-### 运行测试
+### 9.1 运行测试
 
 ```bash
 # 运行所有测试
@@ -330,7 +349,7 @@ cargo test test_name
 cargo test --test integration_tests
 ```
 
-### 性能测试
+### 9.2 性能测试
 
 ```bash
 # 运行基准测试
@@ -340,16 +359,16 @@ cargo bench
 cargo run --example performance_benchmark_example
 ```
 
-### 调试技巧
+### 9.3 调试技巧
 
 - 使用`dbg!`宏进行调试输出
 - 使用`println!`进行日志记录
 - 使用IDE调试器进行断点调试
 - 使用性能分析工具
 
-## 🚀 部署指南
+## 10. 🚀 部署指南
 
-### Web应用部署
+### 10.1 Web应用部署
 
 ```bash
 # 构建生产版本
@@ -359,7 +378,7 @@ cargo build --release --features dioxus
 # 将dist目录上传到CDN或静态托管服务
 ```
 
-### 桌面应用部署
+### 10.2 桌面应用部署
 
 ```bash
 # 构建Tauri应用
@@ -369,7 +388,7 @@ cargo tauri build
 cargo build --release --features slint
 ```
 
-### 移动应用部署
+### 10.3 移动应用部署
 
 ```bash
 # 构建移动应用
@@ -377,46 +396,46 @@ cargo tauri android build
 cargo tauri ios build
 ```
 
-## 📞 获取帮助
+## 11. 📞 获取帮助
 
-### 文档资源
+### 11.1 文档资源
 
 - **完整指南**: `docs/RUST_1_90_UI_COMPREHENSIVE_GUIDE_2025.md`
 - **框架指南**: `docs/2025_FRAMEWORKS_GUIDE.md`
 - **架构文档**: `docs/ADVANCED_ARCHITECTURE_PATTERNS_2025.md`
 - **API文档**: `docs/CODE_DOCUMENTATION_2025.md`
 
-### 社区支持
+### 11.2 社区支持
 
 - **GitHub Issues**: 技术问题和bug报告
 - **讨论区**: 一般性讨论和问题
 - **示例代码**: `examples/`目录下的所有示例
 - **测试用例**: `tests/`目录下的测试代码
 
-### 学习资源
+### 11.3 学习资源
 
 - **官方文档**: 各框架的官方文档
 - **社区教程**: 社区编写的教程和指南
 - **视频教程**: 在线视频教程
 - **博客文章**: 技术博客和文章
 
-## 🎯 下一步
+## 12. 🎯 下一步
 
-### 立即开始
+### 12.1 立即开始
 
 1. **选择框架**: 根据您的需求选择合适的框架
 2. **运行示例**: 运行相关的示例代码
 3. **阅读文档**: 深入学习框架文档
 4. **实践项目**: 开始您的第一个项目
 
-### 深入学习
+### 12.2 深入学习
 
 1. **架构模式**: 学习企业级架构模式
 2. **性能优化**: 掌握性能优化技巧
 3. **跨平台开发**: 学习跨平台开发策略
 4. **社区参与**: 参与社区建设和贡献
 
-### 项目贡献
+### 12.3 项目贡献
 
 1. **代码贡献**: 提交代码改进
 2. **文档贡献**: 改进文档和示例
@@ -426,6 +445,3 @@ cargo tauri ios build
 ---
 
 **开始您的Rust UI开发之旅！** 🦀✨
-
-*最后更新: 2025年1月*  
-*版本: v1.0*

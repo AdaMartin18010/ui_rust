@@ -132,7 +132,7 @@ rcgen = "0.14.4"
 
 # 基础依赖统一
 dotenvy = "0.15.7"
-tempfile = "3.22.0"
+tempfile = "3.23.0"
 
 # gRPC 相关 - 2025年1月最新稳定版本
 tonic = { version = "0.14.2", features = ["transport", "tls-ring", "tls-webpki-roots", "channel"] }
@@ -199,7 +199,7 @@ bytes = "1.10.1"
 indexmap = "2.11.4"
 once_cell = "1.21.3"
 num_cpus = "1.17.0"
-libc = "0.2.175"
+libc = "0.2.176"
 rand = "0.9.2"
 sha2 = "0.10.9"
 hex = "0.4.3"
